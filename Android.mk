@@ -1,6 +1,10 @@
 LOCAL_PATH := $(call my-dir)
 
-include $(LOCAL_PATH)/config.mk
+ifneq ($(AUDIO_WRAPPER_CONFIG),)
+  include $(AUDIO_WRAPPER_CONFIG)
+else
+  include $(LOCAL_PATH)/config.mk
+endif
 
 L_CFLAGS := -g -Wall
 
