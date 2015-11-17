@@ -21,6 +21,7 @@
 #include <errno.h>
 #include <pthread.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <sys/time.h>
 
 #include <cutils/log.h>
