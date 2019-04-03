@@ -276,7 +276,8 @@ static int adev_open_output_stream(struct audio_hw_device *dev,
                               audio_devices_t devices,
                               audio_output_flags_t flags,
                               struct audio_config *config,
-                              struct audio_stream_out **stream_out)
+                              struct audio_stream_out **stream_out,
+                              const char *address)
 {
     struct wrapper_stream_out *out;
     int ret;
@@ -286,9 +287,8 @@ static int adev_open_output_stream(struct audio_hw_device *dev,
     if (!out)
         return -ENOMEM;
 
-    ret = WRAPPED_DEVICE_CALL(dev, open_output_stream, devices, (int *)&config->format,
-                              &config->channel_mask, &config->sample_rate,
-                              &WRAPPED_STREAM_OUT(out));
+    ret = WRAPPED_DEVICE(dev)->open_output_stream(WRAPPED_DEVICE(dev), handle, devices,
+                              flags, config, &WRAPPED_STREAM_OUT(out), address);
 
     if(ret < 0)
         goto err_open;
@@ -404,15 +404,17 @@ static int adev_get_mic_mute(const struct audio_hw_device *dev, bool *state)
 static size_t adev_get_input_buffer_size(const struct audio_hw_device *dev,
                                     const struct audio_config *config)
 {
-    RETURN_WRAPPED_DEVICE_CALL(dev, get_input_buffer_size, config->sample_rate,
-                               config->format, popcount(config->channel_mask));
+    RETURN_WRAPPED_DEVICE_CALL(dev, get_input_buffer_size, config);
 }
 
 static int adev_open_input_stream(struct audio_hw_device *dev,
-                             audio_io_handle_t handle,
-                             audio_devices_t devices,
-                             struct audio_config *config,
-                             struct audio_stream_in **stream_in)
+                                  audio_io_handle_t handle,
+                                  audio_devices_t devices,
+                                  struct audio_config *config,
+                                  struct audio_stream_in **stream_in,
+                                  audio_input_flags_t flags __unused,
+                                  const char *address __unused,
+                                  audio_source_t source __unused)
 {
     struct wrapper_stream_in *in;
     int ret;
@@ -423,12 +425,11 @@ static int adev_open_input_stream(struct audio_hw_device *dev,
     if (!in)
         return -ENOMEM;
 
-    ret = WRAPPED_DEVICE_CALL(dev, open_input_stream, devices, (int *)&config->format,
-                              &config->channel_mask, &config->sample_rate,
-                              (audio_in_acoustics_t)0, &WRAPPED_STREAM_IN(in));
+    ret = WRAPPED_DEVICE_CALL(dev, open_input_stream, handle, devices, config,
+                              &WRAPPED_STREAM_IN(in), flags, address, source);
 
-    if(ret < 0)
-        goto err_open;
+    if (!ret)
+       goto err_open;
 
     in->stream.common.get_sample_rate = in_get_sample_rate;
     in->stream.common.set_sample_rate = in_set_sample_rate;
