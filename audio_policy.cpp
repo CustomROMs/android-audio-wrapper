@@ -31,8 +31,8 @@
 #include <system/audio_policy.h>
 #include <hardware/audio_policy.h>
 
-#include "include/4.0/system/audio.h"
-#include "include/4.0/hardware/audio_policy.h"
+#include "include/4.1/system/audio.h"
+#include "include/4.1/hardware/audio_policy.h"
 #include "aps_wrapper.h"
 #include "common.h"
 
@@ -85,8 +85,7 @@ static int ap_set_device_connection_state(struct audio_policy *pol,
 {
     ALOGV("%s: device: 0x%x, state: %d, address: %s", __FUNCTION__, device, state,
           device_address);
-    device = convert_audio_devices(device, JB_TO_ICS);
-    RETURN_WRAPPED_CALL(pol, set_device_connection_state, (wrapper::audio_devices_t) device,
+    RETURN_WRAPPED_CALL(pol, set_device_connection_state, device,
                         state, device_address);
 }
 
@@ -96,8 +95,7 @@ static audio_policy_dev_state_t ap_get_device_connection_state(
                                             const char *device_address)
 {
     ALOGV("%s: device: 0x%x, address: %s", __FUNCTION__, device, device_address);
-    device = convert_audio_devices(device, JB_TO_ICS);
-    RETURN_WRAPPED_CALL(pol, get_device_connection_state, (wrapper::audio_devices_t) device,
+    RETURN_WRAPPED_CALL(pol, get_device_connection_state, device,
                         device_address);
 }
 
@@ -146,7 +144,8 @@ static audio_io_handle_t ap_get_output(struct audio_policy *pol,
                                        uint32_t sampling_rate,
                                        audio_format_t format,
                                        audio_channel_mask_t channelMask,
-                                       audio_output_flags_t flags)
+                                       audio_output_flags_t flags,
+                                       const audio_offload_info_t *info)
 {
     RETURN_WRAPPED_CALL(pol, get_output, stream, sampling_rate, format, channelMask, flags);
 }
@@ -218,14 +217,12 @@ static int ap_get_stream_volume_index(const struct audio_policy *pol,
     return ret;
 }
 
-#ifndef ICS_AUDIO_BLOB
 static int ap_set_stream_volume_index_for_device(struct audio_policy *pol,
                                       audio_stream_type_t stream,
                                       int index,
                                       audio_devices_t device)
 {
     ALOGV("%s: stream %d, index %d, device: 0x%x", __FUNCTION__, stream, index, device);
-    device = convert_audio_devices(device, JB_TO_ICS);
     // This function does not exist for ICS audio HALs so the have to call the
     // old function that doesn't differentiate between devices.
     // TODO: Somehow track the current active devices and only allow to set
@@ -240,13 +237,11 @@ static int ap_get_stream_volume_index_for_device(const struct audio_policy *pol,
                                       audio_devices_t device)
 {
     int ret;
-    device = convert_audio_devices(device, JB_TO_ICS);
     ret = WRAPPED_POLICY(pol)->get_stream_volume_index(WRAPPED_POLICY(pol), stream, index);
     //ret = WRAPPED_POLICY(pol)->get_stream_volume_index_for_device(WRAPPED_POLICY(pol), stream, index, device);
     ALOGV("%s: stream %d, index %d, device: 0x%x", __FUNCTION__, stream, *index, device);
     return ret;
 }
-#endif
 
 static uint32_t ap_get_strategy_for_stream(const struct audio_policy *pol,
                                            audio_stream_type_t stream)
@@ -258,9 +253,7 @@ static audio_devices_t ap_get_devices_for_stream(const struct audio_policy *pol,
                                           audio_stream_type_t stream)
 {
     ALOGV("%s: stream_type: %d", __FUNCTION__, stream);
-    wrapper::audio_devices_t result;
-    result = WRAPPED_POLICY(pol)->get_devices_for_stream(WRAPPED_POLICY(pol), stream);
-    return convert_audio_devices(result, ICS_TO_JB);
+    return WRAPPED_POLICY(pol)->get_devices_for_stream(WRAPPED_POLICY(pol), stream);
 }
 
 static audio_io_handle_t ap_get_output_for_effect(struct audio_policy *pol,
@@ -295,7 +288,6 @@ static bool ap_is_stream_active(const struct audio_policy *pol, audio_stream_typ
     RETURN_WRAPPED_CALL(pol, is_stream_active, stream, in_past_ms);
 }
 
-#ifndef ICS_AUDIO_BLOB
 static bool ap_is_stream_active_remotely(const struct audio_policy *pol, audio_stream_type_t stream,
                                              uint32_t in_past_ms)
 {
@@ -308,7 +300,6 @@ static bool ap_is_stream_active_remotely(const struct audio_policy *pol, audio_s
     // just return 0.
     return 0;
 }
-#endif
 
 static int ap_dump(const struct audio_policy *pol, int fd)
 {
@@ -378,10 +369,8 @@ static int create_wrapper_ap(const struct audio_policy_device *device,
     dap->policy.init_stream_volume = ap_init_stream_volume;
     dap->policy.set_stream_volume_index = ap_set_stream_volume_index;
     dap->policy.get_stream_volume_index = ap_get_stream_volume_index;
-#ifndef ICS_AUDIO_BLOB
     dap->policy.set_stream_volume_index_for_device = ap_set_stream_volume_index_for_device;
     dap->policy.get_stream_volume_index_for_device = ap_get_stream_volume_index_for_device;
-#endif
     dap->policy.get_strategy_for_stream = ap_get_strategy_for_stream;
     dap->policy.get_devices_for_stream = ap_get_devices_for_stream;
     dap->policy.get_output_for_effect = ap_get_output_for_effect;
@@ -389,11 +378,9 @@ static int create_wrapper_ap(const struct audio_policy_device *device,
     dap->policy.unregister_effect = ap_unregister_effect;
     dap->policy.set_effect_enabled = ap_set_effect_enabled;
     dap->policy.is_stream_active = ap_is_stream_active;
-#ifndef ICS_AUDIO_BLOB
     // No NULL check in AudioPolicyService.cpp
     dap->policy.is_stream_active_remotely = ap_is_stream_active_remotely;
     dap->policy.is_source_active = NULL;
-#endif
     dap->policy.dump = ap_dump;
 
     *ap = &dap->policy;
