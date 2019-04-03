@@ -101,7 +101,7 @@ static audio_policy_dev_state_t ap_get_device_connection_state(
 
 static void ap_set_phone_state(struct audio_policy *pol, audio_mode_t state)
 {
-    WRAPPED_POLICY(pol)->set_phone_state(WRAPPED_POLICY(pol), state);
+    WRAPPED_POLICY(pol)->set_phone_state(WRAPPED_POLICY(pol), static_cast<wrapper::audio_mode_t>(state));
 }
 
 // deprecated, never called
@@ -147,19 +147,21 @@ static audio_io_handle_t ap_get_output(struct audio_policy *pol,
                                        audio_output_flags_t flags,
                                        const audio_offload_info_t *info)
 {
-    RETURN_WRAPPED_CALL(pol, get_output, stream, sampling_rate, format, channelMask, flags);
+    RETURN_WRAPPED_CALL(pol, get_output, static_cast<wrapper::audio_stream_type_t>(stream),
+                        sampling_rate, static_cast<wrapper::audio_format_t>(format),
+                        channelMask, static_cast<wrapper::audio_output_flags_t>(flags), info);
 }
 
 static int ap_start_output(struct audio_policy *pol, audio_io_handle_t output,
                            audio_stream_type_t stream, int session)
 {
-    RETURN_WRAPPED_CALL(pol, start_output, output, stream, session);
+    RETURN_WRAPPED_CALL(pol, start_output, output, static_cast<wrapper::audio_stream_type_t>(stream), session);
 }
 
 static int ap_stop_output(struct audio_policy *pol, audio_io_handle_t output,
                           audio_stream_type_t stream, int session)
 {
-    RETURN_WRAPPED_CALL(pol, stop_output, output, stream, session);
+    RETURN_WRAPPED_CALL(pol, stop_output, output, static_cast<wrapper::audio_stream_type_t>(stream), session);
 }
 
 static void ap_release_output(struct audio_policy *pol,
@@ -174,7 +176,8 @@ static audio_io_handle_t ap_get_input(struct audio_policy *pol, audio_source_t i
                                       audio_channel_mask_t channelMask,
                                       audio_in_acoustics_t acoustics)
 {
-    RETURN_WRAPPED_CALL(pol, get_input, inputSource, sampling_rate, format, channelMask, acoustics);
+    RETURN_WRAPPED_CALL(pol, get_input, static_cast<wrapper::audio_source_t>(inputSource),
+                                            sampling_rate, static_cast<wrapper::audio_format_t>(format), channelMask, acoustics);
 }
 
 static int ap_start_input(struct audio_policy *pol, audio_io_handle_t input)
@@ -197,7 +200,7 @@ static void ap_init_stream_volume(struct audio_policy *pol,
                                   int index_max)
 {
     ALOGV("%s: stream %d, index_min %d, index_max: %d", __FUNCTION__, stream, index_min, index_max);
-    WRAPPED_CALL(pol, init_stream_volume, stream, index_min, index_max);
+    WRAPPED_CALL(pol, init_stream_volume, static_cast<wrapper::audio_stream_type_t>(stream), index_min, index_max);
 }
 
 static int ap_set_stream_volume_index(struct audio_policy *pol,
@@ -205,14 +208,14 @@ static int ap_set_stream_volume_index(struct audio_policy *pol,
                                       int index)
 {
     ALOGV("%s: stream %d, index %d", __FUNCTION__, stream, index);
-    RETURN_WRAPPED_CALL(pol, set_stream_volume_index, stream, index);
+    RETURN_WRAPPED_CALL(pol, set_stream_volume_index, static_cast<wrapper::audio_stream_type_t>(stream), index);
 }
 
 static int ap_get_stream_volume_index(const struct audio_policy *pol,
                                       audio_stream_type_t stream,
                                       int *index)
 {
-    int ret = WRAPPED_POLICY(pol)->get_stream_volume_index(WRAPPED_POLICY(pol), stream, index);
+    int ret = WRAPPED_POLICY(pol)->get_stream_volume_index(WRAPPED_POLICY(pol), static_cast<wrapper::audio_stream_type_t>(stream), index);
     ALOGV("%s: stream %d, index %d", __FUNCTION__, stream, *index);
     return ret;
 }
@@ -227,7 +230,7 @@ static int ap_set_stream_volume_index_for_device(struct audio_policy *pol,
     // old function that doesn't differentiate between devices.
     // TODO: Somehow track the current active devices and only allow to set
     // volumes for those devices.
-    RETURN_WRAPPED_CALL(pol, set_stream_volume_index, stream, index);
+    RETURN_WRAPPED_CALL(pol, set_stream_volume_index, static_cast<wrapper::audio_stream_type_t>(stream), index);
     //RETURN_WRAPPED_POLICY(pol, set_stream_volume_index_for_device, stream, index, device);
 }
 
@@ -237,7 +240,7 @@ static int ap_get_stream_volume_index_for_device(const struct audio_policy *pol,
                                       audio_devices_t device)
 {
     int ret;
-    ret = WRAPPED_POLICY(pol)->get_stream_volume_index(WRAPPED_POLICY(pol), stream, index);
+    ret = WRAPPED_POLICY(pol)->get_stream_volume_index(WRAPPED_POLICY(pol), static_cast<wrapper::audio_stream_type_t>(stream), index);
     //ret = WRAPPED_POLICY(pol)->get_stream_volume_index_for_device(WRAPPED_POLICY(pol), stream, index, device);
     ALOGV("%s: stream %d, index %d, device: 0x%x", __FUNCTION__, stream, *index, device);
     return ret;
@@ -246,14 +249,14 @@ static int ap_get_stream_volume_index_for_device(const struct audio_policy *pol,
 static uint32_t ap_get_strategy_for_stream(const struct audio_policy *pol,
                                            audio_stream_type_t stream)
 {
-    RETURN_WRAPPED_CALL(pol, get_strategy_for_stream, stream);
+    RETURN_WRAPPED_CALL(pol, get_strategy_for_stream, static_cast<wrapper::audio_stream_type_t>(stream));
 }
 
 static audio_devices_t ap_get_devices_for_stream(const struct audio_policy *pol,
                                           audio_stream_type_t stream)
 {
     ALOGV("%s: stream_type: %d", __FUNCTION__, stream);
-    return WRAPPED_POLICY(pol)->get_devices_for_stream(WRAPPED_POLICY(pol), stream);
+    return WRAPPED_POLICY(pol)->get_devices_for_stream(WRAPPED_POLICY(pol), static_cast<wrapper::audio_stream_type_t>(stream));
 }
 
 static audio_io_handle_t ap_get_output_for_effect(struct audio_policy *pol,
@@ -285,7 +288,7 @@ static int ap_set_effect_enabled(struct audio_policy *pol, int id, bool enabled)
 static bool ap_is_stream_active(const struct audio_policy *pol, audio_stream_type_t stream,
                                 uint32_t in_past_ms)
 {
-    RETURN_WRAPPED_CALL(pol, is_stream_active, stream, in_past_ms);
+    RETURN_WRAPPED_CALL(pol, is_stream_active, static_cast<wrapper::audio_stream_type_t>(stream), in_past_ms);
 }
 
 static bool ap_is_stream_active_remotely(const struct audio_policy *pol, audio_stream_type_t stream,

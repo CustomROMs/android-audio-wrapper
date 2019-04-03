@@ -631,17 +631,6 @@ typedef enum {
     AUDIO_MODE_MAX              = AUDIO_MODE_CNT - 1,
 } audio_mode_t;
 
-/* This enum is deprecated */
-typedef enum {
-    AUDIO_IN_ACOUSTICS_NONE          = 0,
-    AUDIO_IN_ACOUSTICS_AGC_ENABLE    = 0x0001,
-    AUDIO_IN_ACOUSTICS_AGC_DISABLE   = 0,
-    AUDIO_IN_ACOUSTICS_NS_ENABLE     = 0x0002,
-    AUDIO_IN_ACOUSTICS_NS_DISABLE    = 0,
-    AUDIO_IN_ACOUSTICS_TX_IIR_ENABLE = 0x0004,
-    AUDIO_IN_ACOUSTICS_TX_DISABLE    = 0,
-} audio_in_acoustics_t;
-
 enum {
     AUDIO_DEVICE_NONE                          = 0x0,
     /* reserved bits */
@@ -867,81 +856,11 @@ typedef enum {
 
 } audio_input_flags_t;
 
-/* Additional information about compressed streams offloaded to
- * hardware playback
- * The version and size fields must be initialized by the caller by using
- * one of the constants defined here.
- */
-typedef struct {
-    uint16_t version;                   // version of the info structure
-    uint16_t size;                      // total size of the structure including version and size
-    uint32_t sample_rate;               // sample rate in Hz
-    audio_channel_mask_t channel_mask;  // channel mask
-    audio_format_t format;              // audio format
-    audio_stream_type_t stream_type;    // stream type
-    uint32_t bit_rate;                  // bit rate in bits per second
-    int64_t duration_us;                // duration in microseconds, -1 if unknown
-    bool has_video;                     // true if stream is tied to a video stream
-    bool is_streaming;                  // true if streaming, false if local playback
-    uint32_t bit_width;
-    uint32_t offload_buffer_size;       // offload fragment size
-    audio_usage_t usage;
-} audio_offload_info_t;
-
 #define AUDIO_MAKE_OFFLOAD_INFO_VERSION(maj,min) \
             ((((maj) & 0xff) << 8) | ((min) & 0xff))
 
 #define AUDIO_OFFLOAD_INFO_VERSION_0_1 AUDIO_MAKE_OFFLOAD_INFO_VERSION(0, 1)
 #define AUDIO_OFFLOAD_INFO_VERSION_CURRENT AUDIO_OFFLOAD_INFO_VERSION_0_1
-
-static const audio_offload_info_t AUDIO_INFO_INITIALIZER = {
-    version: AUDIO_OFFLOAD_INFO_VERSION_CURRENT,
-    size: sizeof(audio_offload_info_t),
-    sample_rate: 0,
-    channel_mask: 0,
-    format: AUDIO_FORMAT_DEFAULT,
-    stream_type: AUDIO_STREAM_VOICE_CALL,
-    bit_rate: 0,
-    duration_us: 0,
-    has_video: false,
-    is_streaming: false,
-    bit_width: 16,
-    offload_buffer_size: 0,
-    usage: AUDIO_USAGE_UNKNOWN,
-};
-
-/* common audio stream configuration parameters
- * You should memset() the entire structure to zero before use to
- * ensure forward compatibility
- */
-struct audio_config {
-    uint32_t sample_rate;
-    audio_channel_mask_t channel_mask;
-    audio_format_t  format;
-    audio_offload_info_t offload_info;
-    size_t frame_count;
-};
-typedef struct audio_config audio_config_t;
-
-static const audio_config_t AUDIO_CONFIG_INITIALIZER = {
-    sample_rate: 0,
-    channel_mask: AUDIO_CHANNEL_NONE,
-    format: AUDIO_FORMAT_DEFAULT,
-    offload_info: {
-        version: AUDIO_OFFLOAD_INFO_VERSION_CURRENT,
-        size: sizeof(audio_offload_info_t),
-        sample_rate: 0,
-        channel_mask: 0,
-        format: AUDIO_FORMAT_DEFAULT,
-        stream_type: AUDIO_STREAM_VOICE_CALL,
-        bit_rate: 0,
-        duration_us: 0,
-        has_video: false,
-        is_streaming: false
-    },
-    frame_count: 0,
-};
-
 
 /* audio hw module handle functions or structures referencing a module */
 typedef int audio_module_handle_t;

@@ -80,8 +80,6 @@ __BEGIN_DECLS
  */
 
 /* XXX: this should be defined OUTSIDE of frameworks/base */
-struct effect_descriptor_s;
-
 struct audio_policy {
     /*
      * configuration functions
