@@ -137,20 +137,13 @@ static int out_dump(const struct audio_stream *stream, int fd)
 static int out_set_parameters(struct audio_stream *stream, const char *kvpairs)
 {
     ALOGI("%s: kvpairs: %s", __FUNCTION__, kvpairs);
-    int ret;
-    char * fixed_kvpairs = fixup_audio_parameters(kvpairs, JB_TO_ICS);
-    ret = WRAPPED_STREAM_OUT_COMMON_CALL(stream, set_parameters, fixed_kvpairs);
-    free(fixed_kvpairs);
-    return ret;
+    return WRAPPED_STREAM_OUT_COMMON_CALL(stream, set_parameters, kvpairs);
 }
 
 static char * out_get_parameters(const struct audio_stream *stream, const char *keys)
 {
     ALOGI("%s: keys: %s", __FUNCTION__, keys);
-    char * kvpairs = WRAPPED_STREAM_OUT_COMMON_CALL(stream, get_parameters, keys);
-    char * fixed_kvpairs = fixup_audio_parameters(kvpairs, ICS_TO_JB);
-    free(kvpairs);
-    return fixed_kvpairs;
+    return WRAPPED_STREAM_OUT_COMMON_CALL(stream, get_parameters, keys);
 }
 
 static uint32_t out_get_latency(const struct audio_stream_out *stream)
@@ -242,21 +235,14 @@ static int in_dump(const struct audio_stream *stream, int fd)
 static int in_set_parameters(struct audio_stream *stream, const char *kvpairs)
 {
     ALOGI("%s: kvpairs: %s", __FUNCTION__, kvpairs);
-    int ret;
-    char * fixed_kvpairs = fixup_audio_parameters(kvpairs, JB_TO_ICS);
-    ret = WRAPPED_STREAM_IN_COMMON_CALL(stream, set_parameters, fixed_kvpairs);
-    free(fixed_kvpairs);
-    return ret;
+    return WRAPPED_STREAM_IN_COMMON_CALL(stream, set_parameters, kvpairs);
 }
 
 static char * in_get_parameters(const struct audio_stream *stream,
                                 const char *keys)
 {
     ALOGI("%s: keys: %s", __FUNCTION__, keys);
-    char * kvpairs = WRAPPED_STREAM_IN_COMMON_CALL(stream, get_parameters, keys);
-    char * fixed_kvpairs = fixup_audio_parameters(kvpairs, ICS_TO_JB);
-    free(kvpairs);
-    return fixed_kvpairs;
+    return WRAPPED_STREAM_IN_COMMON_CALL(stream, get_parameters, keys);
 }
 
 static int in_set_gain(struct audio_stream_in *stream, float gain)
@@ -286,18 +272,11 @@ static int in_remove_audio_effect(const struct audio_stream *stream, effect_hand
 }
 
 static int adev_open_output_stream(struct audio_hw_device *dev,
-#ifndef ICS_AUDIO_BLOB
                               audio_io_handle_t handle,
                               audio_devices_t devices,
                               audio_output_flags_t flags,
                               struct audio_config *config,
                               struct audio_stream_out **stream_out)
-#else
-                              uint32_t devices,
-                              int *format, uint32_t *channels,
-                              uint32_t *sample_rate,
-                              struct audio_stream_out **stream_out)
-#endif
 {
     struct wrapper_stream_out *out;
     int ret;
@@ -307,17 +286,9 @@ static int adev_open_output_stream(struct audio_hw_device *dev,
     if (!out)
         return -ENOMEM;
 
-
-    devices = convert_audio_devices(devices, JB_TO_ICS);
-
-#ifdef ICS_AUDIO_BLOB
-    ret = WRAPPED_DEVICE_CALL(dev, open_output_stream, devices, format, channels, sample_rate,
-                              &WRAPPED_STREAM_OUT(out));
-#else
     ret = WRAPPED_DEVICE_CALL(dev, open_output_stream, devices, (int *)&config->format,
                               &config->channel_mask, &config->sample_rate,
                               &WRAPPED_STREAM_OUT(out));
-#endif
 
     if(ret < 0)
         goto err_open;
@@ -338,9 +309,7 @@ static int adev_open_output_stream(struct audio_hw_device *dev,
     out->stream.set_volume = out_set_volume;
     out->stream.write = out_write;
     out->stream.get_render_position = out_get_render_position;
-#ifndef ICS_AUDIO_BLOB
     out->stream.get_next_write_timestamp = NULL; //out_get_next_write_timestamp;
-#endif
 
     *stream_out = &out->stream;
     return 0;
@@ -361,26 +330,19 @@ static void adev_close_output_stream(struct audio_hw_device *dev,
 static int adev_set_parameters(struct audio_hw_device *dev, const char *kvpairs)
 {
     ALOGI("%s: kvpairs: %s", __FUNCTION__, kvpairs);
-    char *fixed_kvpairs = fixup_audio_parameters(kvpairs, JB_TO_ICS);
-    int ret = WRAPPED_DEVICE_CALL(dev, set_parameters, fixed_kvpairs);
-    free(fixed_kvpairs);
-    return ret;
+    return WRAPPED_DEVICE_CALL(dev, set_parameters, kvpairs);
 }
 
 static char * adev_get_parameters(const struct audio_hw_device *dev,
                                   const char *keys)
 {
     ALOGI("%s: keys: %s", __FUNCTION__, keys);
-    char *kvpairs = WRAPPED_DEVICE_CALL(dev, get_parameters, keys);
-    char *fixed_kvpairs = fixup_audio_parameters(kvpairs, ICS_TO_JB);
-    free(kvpairs);
-    return fixed_kvpairs;
+    return WRAPPED_DEVICE_CALL(dev, get_parameters, keys);
 }
 
 static uint32_t adev_get_supported_devices(const struct audio_hw_device *dev)
 {
-    uint32_t devices = WRAPPED_DEVICE_CALL(dev, get_supported_devices);
-    return convert_audio_devices(devices, ICS_TO_JB);
+    return WRAPPED_DEVICE_CALL(dev, get_supported_devices);
 }
 
 static int adev_init_check(const struct audio_hw_device *dev)
@@ -439,36 +401,18 @@ static int adev_get_mic_mute(const struct audio_hw_device *dev, bool *state)
 }
 
 
-#ifndef ICS_AUDIO_BLOB
 static size_t adev_get_input_buffer_size(const struct audio_hw_device *dev,
                                     const struct audio_config *config)
 {
     RETURN_WRAPPED_DEVICE_CALL(dev, get_input_buffer_size, config->sample_rate,
                                config->format, popcount(config->channel_mask));
 }
-#else
-static size_t adev_get_input_buffer_size(const struct audio_hw_device *dev,
-                                    uint32_t sample_rate, int format,
-                                    int channel_count)
-{
-    RETURN_WRAPPED_DEVICE_CALL(dev, get_input_buffer_size, sample_rate, format,
-                               channel_count);
-}
-#endif
 
-#ifndef ICS_AUDIO_BLOB
 static int adev_open_input_stream(struct audio_hw_device *dev,
                              audio_io_handle_t handle,
                              audio_devices_t devices,
                              struct audio_config *config,
                              struct audio_stream_in **stream_in)
-#else
-static int adev_open_input_stream(struct audio_hw_device *dev, uint32_t devices,
-                             int *format, uint32_t *channels,
-                             uint32_t *sample_rate,
-                             audio_in_acoustics_t acoustics,
-                             struct audio_stream_in **stream_in)
-#endif
 {
     struct wrapper_stream_in *in;
     int ret;
@@ -479,16 +423,10 @@ static int adev_open_input_stream(struct audio_hw_device *dev, uint32_t devices,
     if (!in)
         return -ENOMEM;
 
-    devices = convert_audio_devices(devices, JB_TO_ICS);
-
-#ifndef ICS_AUDIO_BLOB
     ret = WRAPPED_DEVICE_CALL(dev, open_input_stream, devices, (int *)&config->format,
                               &config->channel_mask, &config->sample_rate,
                               (audio_in_acoustics_t)0, &WRAPPED_STREAM_IN(in));
-#else
-    ret = WRAPPED_DEVICE_CALL(dev, open_input_stream, devices, format, channels,
-                              sample_rate, acoustics, &WRAPPED_STREAM_IN(in));
-#endif
+
     if(ret < 0)
         goto err_open;
 
@@ -560,11 +498,7 @@ static int adev_open(const hw_module_t* module, const char* name,
     }
 
     adev->device.common.tag = HARDWARE_DEVICE_TAG;
-#ifndef ICS_AUDIO_BLOB
     adev->device.common.version = AUDIO_DEVICE_API_VERSION_2_0;
-#else
-    adev->device.common.version = AUDIO_DEVICE_API_VERSION_1_0;
-#endif
     adev->device.common.module = (struct hw_module_t *) module;
     adev->device.common.close = adev_close;
 
@@ -572,11 +506,9 @@ static int adev_open(const hw_module_t* module, const char* name,
     adev->device.init_check = adev_init_check;
     adev->device.set_voice_volume = adev_set_voice_volume;
     adev->device.set_master_volume = adev_set_master_volume;
-#ifndef ICS_AUDIO_BLOB
     adev->device.get_master_volume = NULL; //adev_get_master_volume;
     adev->device.set_master_mute = NULL; //adev_set_master_mute;
     adev->device.get_master_mute = NULL; //adev_get_master_mute;
-#endif
     adev->device.set_mode = adev_set_mode;
     adev->device.set_mic_mute = adev_set_mic_mute;
     adev->device.get_mic_mute = adev_get_mic_mute;
