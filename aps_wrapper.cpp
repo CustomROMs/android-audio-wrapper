@@ -146,12 +146,6 @@ static int aps_close_input(void *service, audio_io_handle_t input)
     WRAPPED_CALL(service, close_input, input);
 }
 
-static int aps_set_stream_output(void *service, audio_stream_type_t stream,
-                                 audio_io_handle_t output)
-{
-    WRAPPED_CALL(service, set_stream_output, stream, output);
-}
-
 static int aps_move_effects(void *service, int session,
                             audio_io_handle_t src_output,
                             audio_io_handle_t dst_output)
@@ -238,7 +232,6 @@ int aps_wrapper_create(void *wrapped_service,
     waps->aps_ops.open_input = aps_open_input;
     waps->aps_ops.close_input = aps_close_input;
     waps->aps_ops.set_stream_volume = aps_set_stream_volume;
-    waps->aps_ops.set_stream_output = aps_set_stream_output;
     waps->aps_ops.set_parameters = aps_set_parameters;
     waps->aps_ops.get_parameters = aps_get_parameters;
     waps->aps_ops.start_tone = aps_start_tone;
