@@ -27,7 +27,7 @@
 #include <cutils/log.h>
 
 #include "common.h"
-#include "include/4.0/hardware/audio.h"
+#include "include/4.1/hardware/audio.h"
 
 struct wrapper_audio_device {
     struct audio_hw_device device;
