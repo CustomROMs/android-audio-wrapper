@@ -19,6 +19,7 @@
 #define LOG_NDEBUG 0
 
 #include <cutils/log.h>
+#include <malloc.h>
 
 #include "aps_wrapper.h"
 #include "common.h"

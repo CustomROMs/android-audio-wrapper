@@ -17,6 +17,7 @@
 #define LOG_TAG "AudioWrapperCommon"
 // #define LOG_NDEBUG 0
 
+#include <malloc.h>
 #include <string.h>
 #include <limits.h>
 
