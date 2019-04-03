@@ -15,8 +15,8 @@
  */
 
 
-#ifndef ANDROID_AUDIO_CORE_H
-#define ANDROID_AUDIO_CORE_H
+#ifndef WRAPPED_ANDROID_AUDIO_CORE_H
+#define WRAPPED_ANDROID_AUDIO_CORE_H
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -25,6 +25,8 @@
 #include <sys/types.h>
 
 #include <cutils/bitops.h>
+
+namespace wrapper {
 
 __BEGIN_DECLS
 
@@ -1581,5 +1583,7 @@ static inline bool audio_device_is_digital(audio_devices_t device) {
 }
 
 __END_DECLS
+
+} // namespace wrapper
 
 #endif  // ANDROID_AUDIO_CORE_H

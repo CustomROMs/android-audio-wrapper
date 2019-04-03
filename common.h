@@ -21,7 +21,7 @@
 #include <hardware/audio.h>
 #include <hardware/hardware.h>
 
-#include "include/4.0/system/audio.h"
+#include "include/4.1/system/audio.h"
 
 
 #define ANDROID_VERSION(maj, min) \

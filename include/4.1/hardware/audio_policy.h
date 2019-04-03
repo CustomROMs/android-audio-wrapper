@@ -15,8 +15,8 @@
  */
 
 
-#ifndef ANDROID_AUDIO_POLICY_INTERFACE_H
-#define ANDROID_AUDIO_POLICY_INTERFACE_H
+#ifndef WRAPPED_ANDROID_AUDIO_POLICY_INTERFACE_H
+#define WRAPPED_ANDROID_AUDIO_POLICY_INTERFACE_H
 
 #include <stdint.h>
 #include <sys/cdefs.h>
@@ -26,6 +26,8 @@
 
 #include <system/audio.h>
 #include <system/audio_policy.h>
+
+namespace wrapper {
 
 __BEGIN_DECLS
 
@@ -453,5 +455,7 @@ static inline int audio_policy_dev_close(struct audio_policy_device* device)
 
 
 __END_DECLS
+
+} // namespace wrapper
 
 #endif  // ANDROID_AUDIO_POLICY_INTERFACE_H

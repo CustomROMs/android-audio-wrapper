@@ -20,7 +20,7 @@
 #include <system/audio_policy.h>
 #include <hardware/audio_policy.h>
 
-#include "include/4.0/hardware/audio_policy.h"
+#include "include/4.1/hardware/audio_policy.h"
 
 struct aps_wrapper_service;
 typedef struct aps_wrapper_service aps_wrapper_service_t;

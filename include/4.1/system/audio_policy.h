@@ -15,14 +15,16 @@
  */
 
 
-#ifndef ANDROID_AUDIO_POLICY_CORE_H
-#define ANDROID_AUDIO_POLICY_CORE_H
+#ifndef WRAPPED_ANDROID_AUDIO_POLICY_CORE_H
+#define WRAPPED_ANDROID_AUDIO_POLICY_CORE_H
 
 #include <stdint.h>
 #include <sys/cdefs.h>
 #include <sys/types.h>
 
 #include <cutils/bitops.h>
+
+namespace wrapper {
 
 __BEGIN_DECLS
 
@@ -43,6 +45,8 @@ typedef enum {
     AUDIO_POLICY_FORCE_ANALOG_DOCK,
     AUDIO_POLICY_FORCE_DIGITAL_DOCK,
     AUDIO_POLICY_FORCE_NO_BT_A2DP, /* A2DP sink is not preferred to speaker or wired HS */
+    AUDIO_POLICY_FORCE_SYSTEM_ENFORCED,
+    AUDIO_POLICY_FORCE_HDMI_SYSTEM_AUDIO_ENFORCED,
 
     AUDIO_POLICY_FORCE_CFG_CNT,
     AUDIO_POLICY_FORCE_CFG_MAX = AUDIO_POLICY_FORCE_CFG_CNT - 1,
@@ -56,6 +60,8 @@ typedef enum {
     AUDIO_POLICY_FORCE_FOR_MEDIA,
     AUDIO_POLICY_FORCE_FOR_RECORD,
     AUDIO_POLICY_FORCE_FOR_DOCK,
+    AUDIO_POLICY_FORCE_FOR_SYSTEM,
+    AUDIO_POLICY_FORCE_FOR_HDMI_SYSTEM_AUDIO,
 
     AUDIO_POLICY_FORCE_USE_CNT,
     AUDIO_POLICY_FORCE_USE_MAX = AUDIO_POLICY_FORCE_USE_CNT - 1,
@@ -95,5 +101,7 @@ static inline bool audio_is_low_visibility(audio_stream_type_t stream)
 
 
 __END_DECLS
+
+} // namespace wrapper
 
 #endif  // ANDROID_AUDIO_POLICY_CORE_H
