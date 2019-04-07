@@ -124,34 +124,6 @@ enum {
     AUDIO_FLAG_BYPASS_MUTE                = 0x80,
 };
 
-/* Do not change these values without updating their counterparts
- * in frameworks/base/media/java/android/media/MediaRecorder.java,
- * frameworks/av/services/audiopolicy/AudioPolicyService.cpp,
- * and system/media/audio_effects/include/audio_effects/audio_effects_conf.h!
- */
-typedef enum {
-    AUDIO_SOURCE_DEFAULT             = 0,
-    AUDIO_SOURCE_MIC                 = 1,
-    AUDIO_SOURCE_VOICE_UPLINK        = 2,
-    AUDIO_SOURCE_VOICE_DOWNLINK      = 3,
-    AUDIO_SOURCE_VOICE_CALL          = 4,
-    AUDIO_SOURCE_CAMCORDER           = 5,
-    AUDIO_SOURCE_VOICE_RECOGNITION   = 6,
-    AUDIO_SOURCE_VOICE_COMMUNICATION = 7,
-    AUDIO_SOURCE_REMOTE_SUBMIX       = 8, /* Source for the mix to be presented remotely.      */
-                                          /* An example of remote presentation is Wifi Display */
-                                          /*  where a dongle attached to a TV can be used to   */
-                                          /*  play the mix captured by this audio source.      */
-    AUDIO_SOURCE_CNT,
-    AUDIO_SOURCE_MAX                 = AUDIO_SOURCE_CNT - 1,
-    AUDIO_SOURCE_FM_TUNER            = 1998,
-    AUDIO_SOURCE_HOTWORD             = 1999, /* A low-priority, preemptible audio source for
-                                                for background software hotword detection.
-                                                Same tuning as AUDIO_SOURCE_VOICE_RECOGNITION.
-                                                Used only internally to the framework. Not exposed
-                                                at the audio HAL. */
-} audio_source_t;
-
 /* Audio attributes */
 #define AUDIO_ATTRIBUTES_TAGS_MAX_SIZE 256
 typedef struct {
@@ -237,112 +209,6 @@ typedef enum {
 typedef enum {
     AUDIO_FORMAT_VORBIS_SUB_NONE         = 0x0,
 } audio_format_vorbis_sub_fmt_t;
-
-
-/* Audio format consists of a main format field (upper 8 bits) and a sub format
- * field (lower 24 bits).
- *
- * The main format indicates the main codec type. The sub format field
- * indicates options and parameters for each format. The sub format is mainly
- * used for record to indicate for instance the requested bitrate or profile.
- * It can also be used for certain formats to give informations not present in
- * the encoded audio stream (e.g. octet alignement for AMR).
- */
-typedef enum {
-    AUDIO_FORMAT_INVALID             = 0xFFFFFFFFUL,
-    AUDIO_FORMAT_DEFAULT             = 0,
-    AUDIO_FORMAT_PCM                 = 0x00000000UL, /* DO NOT CHANGE */
-    AUDIO_FORMAT_MP3                 = 0x01000000UL,
-    AUDIO_FORMAT_AMR_NB              = 0x02000000UL,
-    AUDIO_FORMAT_AMR_WB              = 0x03000000UL,
-    AUDIO_FORMAT_AAC                 = 0x04000000UL,
-    AUDIO_FORMAT_HE_AAC_V1           = 0x05000000UL, /* Deprecated, Use AUDIO_FORMAT_AAC_HE_V1*/
-    AUDIO_FORMAT_HE_AAC_V2           = 0x06000000UL, /* Deprecated, Use AUDIO_FORMAT_AAC_HE_V2*/
-    AUDIO_FORMAT_VORBIS              = 0x07000000UL,
-    AUDIO_FORMAT_OPUS                = 0x08000000UL,
-    AUDIO_FORMAT_AC3                 = 0x09000000UL,
-    AUDIO_FORMAT_E_AC3               = 0x0A000000UL,
-    AUDIO_FORMAT_DTS                 = 0x0B000000UL,
-    AUDIO_FORMAT_DTS_HD              = 0x0C000000UL,
-    AUDIO_FORMAT_EVRC                = 0x10000000UL,
-    AUDIO_FORMAT_QCELP               = 0x11000000UL,
-    AUDIO_FORMAT_WMA                 = 0x12000000UL,
-    AUDIO_FORMAT_WMA_PRO             = 0x13000000UL,
-    AUDIO_FORMAT_AAC_ADIF            = 0x14000000UL,
-    AUDIO_FORMAT_EVRCB               = 0x15000000UL,
-    AUDIO_FORMAT_EVRCWB              = 0x16000000UL,
-    AUDIO_FORMAT_AMR_WB_PLUS         = 0x17000000UL,
-    AUDIO_FORMAT_MP2                 = 0x18000000UL,
-    AUDIO_FORMAT_EVRCNW              = 0x19000000UL,
-    AUDIO_FORMAT_PCM_OFFLOAD         = 0x1A000000UL,
-    AUDIO_FORMAT_FLAC                = 0x1B000000UL,
-    AUDIO_FORMAT_ALAC                = 0x1C000000UL,
-    AUDIO_FORMAT_APE                 = 0x1D000000UL,
-    AUDIO_FORMAT_AAC_ADTS            = 0x1E000000UL,
-    AUDIO_FORMAT_MAIN_MASK           = 0xFF000000UL,
-    AUDIO_FORMAT_SUB_MASK            = 0x00FFFFFFUL,
-
-    /* Aliases */
-    /* note != AudioFormat.ENCODING_PCM_16BIT */
-    AUDIO_FORMAT_PCM_16_BIT          = (AUDIO_FORMAT_PCM |
-                                        AUDIO_FORMAT_PCM_SUB_16_BIT),
-    /* note != AudioFormat.ENCODING_PCM_8BIT */
-    AUDIO_FORMAT_PCM_8_BIT           = (AUDIO_FORMAT_PCM |
-                                        AUDIO_FORMAT_PCM_SUB_8_BIT),
-    AUDIO_FORMAT_PCM_32_BIT          = (AUDIO_FORMAT_PCM |
-                                        AUDIO_FORMAT_PCM_SUB_32_BIT),
-    AUDIO_FORMAT_PCM_8_24_BIT        = (AUDIO_FORMAT_PCM |
-                                        AUDIO_FORMAT_PCM_SUB_8_24_BIT),
-    AUDIO_FORMAT_PCM_FLOAT           = (AUDIO_FORMAT_PCM |
-                                        AUDIO_FORMAT_PCM_SUB_FLOAT),
-    AUDIO_FORMAT_PCM_24_BIT_PACKED   = (AUDIO_FORMAT_PCM |
-                                        AUDIO_FORMAT_PCM_SUB_24_BIT_PACKED),
-    AUDIO_FORMAT_AAC_MAIN            = (AUDIO_FORMAT_AAC |
-                                        AUDIO_FORMAT_AAC_SUB_MAIN),
-    AUDIO_FORMAT_AAC_LC              = (AUDIO_FORMAT_AAC |
-                                        AUDIO_FORMAT_AAC_SUB_LC),
-    AUDIO_FORMAT_AAC_SSR             = (AUDIO_FORMAT_AAC |
-                                        AUDIO_FORMAT_AAC_SUB_SSR),
-    AUDIO_FORMAT_AAC_LTP             = (AUDIO_FORMAT_AAC |
-                                        AUDIO_FORMAT_AAC_SUB_LTP),
-    AUDIO_FORMAT_AAC_HE_V1           = (AUDIO_FORMAT_AAC |
-                                        AUDIO_FORMAT_AAC_SUB_HE_V1),
-    AUDIO_FORMAT_AAC_SCALABLE        = (AUDIO_FORMAT_AAC |
-                                        AUDIO_FORMAT_AAC_SUB_SCALABLE),
-    AUDIO_FORMAT_AAC_ERLC            = (AUDIO_FORMAT_AAC |
-                                        AUDIO_FORMAT_AAC_SUB_ERLC),
-    AUDIO_FORMAT_AAC_LD              = (AUDIO_FORMAT_AAC |
-                                        AUDIO_FORMAT_AAC_SUB_LD),
-    AUDIO_FORMAT_AAC_HE_V2           = (AUDIO_FORMAT_AAC |
-                                        AUDIO_FORMAT_AAC_SUB_HE_V2),
-    AUDIO_FORMAT_AAC_ELD             = (AUDIO_FORMAT_AAC |
-                                        AUDIO_FORMAT_AAC_SUB_ELD),
-    AUDIO_FORMAT_AAC_ADTS_MAIN       = (AUDIO_FORMAT_AAC_ADTS |
-                                        AUDIO_FORMAT_AAC_SUB_MAIN),
-    AUDIO_FORMAT_AAC_ADTS_LC         = (AUDIO_FORMAT_AAC_ADTS |
-                                        AUDIO_FORMAT_AAC_SUB_LC),
-    AUDIO_FORMAT_AAC_ADTS_SSR        = (AUDIO_FORMAT_AAC_ADTS |
-                                        AUDIO_FORMAT_AAC_SUB_SSR),
-    AUDIO_FORMAT_AAC_ADTS_LTP        = (AUDIO_FORMAT_AAC_ADTS |
-                                        AUDIO_FORMAT_AAC_SUB_LTP),
-    AUDIO_FORMAT_AAC_ADTS_HE_V1      = (AUDIO_FORMAT_AAC_ADTS |
-                                        AUDIO_FORMAT_AAC_SUB_HE_V1),
-    AUDIO_FORMAT_AAC_ADTS_SCALABLE   = (AUDIO_FORMAT_AAC_ADTS |
-                                        AUDIO_FORMAT_AAC_SUB_SCALABLE),
-    AUDIO_FORMAT_AAC_ADTS_ERLC       = (AUDIO_FORMAT_AAC_ADTS |
-                                        AUDIO_FORMAT_AAC_SUB_ERLC),
-    AUDIO_FORMAT_AAC_ADTS_LD         = (AUDIO_FORMAT_AAC_ADTS |
-                                        AUDIO_FORMAT_AAC_SUB_LD),
-    AUDIO_FORMAT_AAC_ADTS_HE_V2      = (AUDIO_FORMAT_AAC_ADTS |
-                                        AUDIO_FORMAT_AAC_SUB_HE_V2),
-    AUDIO_FORMAT_AAC_ADTS_ELD        = (AUDIO_FORMAT_AAC_ADTS |
-                                        AUDIO_FORMAT_AAC_SUB_ELD),
-    /*Offload PCM formats*/
-    AUDIO_FORMAT_PCM_16_BIT_OFFLOAD  = (AUDIO_FORMAT_PCM_OFFLOAD |
-                                        AUDIO_FORMAT_PCM_SUB_16_BIT),
-    AUDIO_FORMAT_PCM_24_BIT_OFFLOAD  = (AUDIO_FORMAT_PCM_OFFLOAD |
-                                        AUDIO_FORMAT_PCM_SUB_8_24_BIT),
-} audio_format_t;
 
 /* For the channel mask for position assignment representation */
 enum {
@@ -619,18 +485,6 @@ enum {
     AUDIO_INTERLEAVE_RIGHT  = 1,
 };
 
-typedef enum {
-    AUDIO_MODE_INVALID          = -2,
-    AUDIO_MODE_CURRENT          = -1,
-    AUDIO_MODE_NORMAL           = 0,
-    AUDIO_MODE_RINGTONE         = 1,
-    AUDIO_MODE_IN_CALL          = 2,
-    AUDIO_MODE_IN_COMMUNICATION = 3,
-
-    AUDIO_MODE_CNT,
-    AUDIO_MODE_MAX              = AUDIO_MODE_CNT - 1,
-} audio_mode_t;
-
 enum {
     AUDIO_DEVICE_NONE                          = 0x0,
     /* reserved bits */
@@ -802,59 +656,6 @@ enum {
 };
 
 typedef uint32_t audio_devices_t;
-
-/* the audio output flags serve two purposes:
- * - when an AudioTrack is created they indicate a "wish" to be connected to an
- * output stream with attributes corresponding to the specified flags
- * - when present in an output profile descriptor listed for a particular audio
- * hardware module, they indicate that an output stream can be opened that
- * supports the attributes indicated by the flags.
- * the audio policy manager will try to match the flags in the request
- * (when getOuput() is called) to an available output stream.
- */
-typedef enum {
-    AUDIO_OUTPUT_FLAG_NONE = 0x0,       // no attributes
-    AUDIO_OUTPUT_FLAG_DIRECT = 0x1,     // this output directly connects a track
-                                        // to one output stream: no software mixer
-    AUDIO_OUTPUT_FLAG_PRIMARY = 0x2,    // this output is the primary output of
-                                        // the device. It is unique and must be
-                                        // present. It is opened by default and
-                                        // receives routing, audio mode and volume
-                                        // controls related to voice calls.
-    AUDIO_OUTPUT_FLAG_FAST = 0x4,       // output supports "fast tracks",
-                                        // defined elsewhere
-    AUDIO_OUTPUT_FLAG_DEEP_BUFFER = 0x8, // use deep audio buffers
-    AUDIO_OUTPUT_FLAG_COMPRESS_OFFLOAD = 0x10,  // offload playback of compressed
-                                                // streams to hardware codec
-    AUDIO_OUTPUT_FLAG_NON_BLOCKING = 0x20, // use non-blocking write
-    AUDIO_OUTPUT_FLAG_HW_AV_SYNC = 0x40,   // output uses a hardware A/V synchronization source
-    AUDIO_OUTPUT_FLAG_TTS = 0x80,          // output for streams transmitted through speaker
-                                           // at a sample rate high enough to accommodate
-                                           // lower-range ultrasonic playback
-    AUDIO_OUTPUT_FLAG_RAW = 0x100,         // minimize signal processing
-    AUDIO_OUTPUT_FLAG_SYNC = 0x200,        // synchronize I/O streams
-
-    AUDIO_OUTPUT_FLAG_IEC958_NONAUDIO = 0x400, // Audio stream contains compressed audio in
-                                               // SPDIF data bursts, not PCM.
-    AUDIO_OUTPUT_FLAG_VOIP_RX = 0x800,  // use this flag in combination with DIRECT to
-                                         // start voip over voice path.
-    AUDIO_OUTPUT_FLAG_COMPRESS_PASSTHROUGH = 0x1000, // flag for HDMI compressed passthrough
-    AUDIO_OUTPUT_FLAG_DIRECT_PCM = 0x2000, // flag for Direct PCM
-} audio_output_flags_t;
-
-/* The audio input flags are analogous to audio output flags.
- * Currently they are used only when an AudioRecord is created,
- * to indicate a preference to be connected to an input stream with
- * attributes corresponding to the specified flags.
- */
-typedef enum {
-    AUDIO_INPUT_FLAG_NONE       = 0x0,  // no attributes
-    AUDIO_INPUT_FLAG_FAST       = 0x1,  // prefer an input that supports "fast tracks"
-    AUDIO_INPUT_FLAG_HW_HOTWORD = 0x2,  // prefer an input that captures from hw hotword source
-    AUDIO_INPUT_FLAG_RAW        = 0x4,  // minimize signal processing
-    AUDIO_INPUT_FLAG_SYNC       = 0x8,  // synchronize I/O streams
-
-} audio_input_flags_t;
 
 #define AUDIO_MAKE_OFFLOAD_INFO_VERSION(maj,min) \
             ((((maj) & 0xff) << 8) | ((min) & 0xff))
