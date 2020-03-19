@@ -35,14 +35,18 @@ endif
 include $(CLEAR_VARS)
 
 LOCAL_SRC_FILES := \
+    load.c \
     common.cpp \
     audio_hw.cpp
 
+#    audio_hw_hal.cpp
+
 LOCAL_SHARED_LIBRARIES := \
-    libhardware liblog libutils
+    libhardware liblog libutils libdl
 LOCAL_STATIC_LIBRARIES := libmedia_helper
 
 LOCAL_CFLAGS := $(L_CFLAGS)
+LOCAL_INCLUDES := hardware/libhardware_legacy/include
 
 LOCAL_MODULE_PATH := $(TARGET_OUT_SHARED_LIBRARIES)/hw
 LOCAL_MODULE := audio.primary.$(TARGET_BOARD_PLATFORM)

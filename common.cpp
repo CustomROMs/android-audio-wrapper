@@ -25,7 +25,7 @@
 
 #include "common.h"
 
-extern "C" int hw_get_module_by_path(char *path, const struct hw_module_t **module);
+extern "C" int hw_get_module_by_path2(char *path, const struct hw_module_t **module);
 
 int load_vendor_module(const hw_module_t* wrapper_module, const char* name,
                        hw_device_t** device, const char* inst)
@@ -37,7 +37,7 @@ int load_vendor_module(const hw_module_t* wrapper_module, const char* name,
 
     snprintf(module_name, PATH_MAX, "/system/lib/audio.primary.stock.so");
 
-    ret = hw_get_module_by_path(module_name, &module);
+    ret = hw_get_module_by_path2(module_name, &module);
     ALOGE_IF(ret, "%s: couldn't load vendor module %s (%s)", __FUNCTION__,
              module_name, strerror(-ret));
     if (ret)

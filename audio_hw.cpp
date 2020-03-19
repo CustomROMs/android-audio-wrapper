@@ -23,12 +23,22 @@
 #include <stdint.h>
 #include <malloc.h>
 #include <sys/time.h>
+#include <dlfcn.h>
 
 #include <cutils/log.h>
 
 #include "common.h"
 #include "include/4.0/hardware/audio.h"
+
+#include "audio_hw.h"
 //#include <hardware/audio.h>
+
+
+#include <hardware/hardware.h>
+#include <system/audio.h>
+
+#include <hardware_legacy/AudioHardwareInterface.h>
+#include <hardware_legacy/AudioSystemLegacy.h>
 
 struct wrapper_audio_device {
     struct audio_hw_device device;
@@ -45,6 +55,33 @@ struct wrapper_stream_in {
     struct wrapper::audio_stream_in *wrapped_stream;
 };
 
+struct legacy_audio_module {
+    struct audio_module module;
+};
+
+struct legacy_audio_device {
+    struct audio_hw_device device;
+
+    struct AudioHardwareInterface *hwif;
+};
+
+/*struct legacy_stream_out {
+    struct audio_stream_out stream;
+
+    AudioStreamOut *legacy_out;
+};*/
+
+struct legacy_stream_in {
+    struct audio_stream_in stream;
+
+   struct AudioStreamInANM *legacy_in;
+};
+
+enum {
+    HAL_API_REV_1_0,
+    HAL_API_REV_2_0,
+    HAL_API_REV_NUM
+} hal_api_rev;
 
 /**
  * device macros.
@@ -97,6 +134,10 @@ struct wrapper_stream_in {
 
 static uint32_t out_get_sample_rate(const struct audio_stream *stream)
 {
+    /*const struct legacy_stream_out *out =
+        reinterpret_cast<const struct legacy_stream_out *>(stream);
+    return out->legacy_out->sampleRate();*/
+    //return DEFAULT_OUT_SAMPLING_RATE;
     RETURN_WRAPPED_STREAM_OUT_COMMON_CALL(stream, get_sample_rate);
 }
 
@@ -190,7 +231,16 @@ static int out_remove_audio_effect(const struct audio_stream *stream, effect_han
 /** audio_stream_in implementation **/
 static uint32_t in_get_sample_rate(const struct audio_stream *stream)
 {
-    RETURN_WRAPPED_STREAM_IN_COMMON_CALL(stream, get_sample_rate);
+    ALOGE("%s: ", __func__);
+    const struct legacy_stream_in *in =
+        reinterpret_cast<const struct legacy_stream_in *>(stream);
+
+    for (int i=0; i < 2000; i+=sizeof(int)) {
+       ALOGE("%s: mem = %p?", __func__, *(int*)(in->legacy_in + i));
+    }
+    //return in->legacy_in->mSampleRate;
+
+    return DEFAULT_IN_SAMPLE_RATE;
 }
 
 static int in_set_sample_rate(struct audio_stream *stream, uint32_t rate)
@@ -426,6 +476,8 @@ static int adev_open_input_stream(struct audio_hw_device *dev,
 
     ret = WRAPPED_DEVICE(dev)->open_input_stream(WRAPPED_DEVICE(dev), handle, devices, config,
                               &WRAPPED_STREAM_IN(in), flags, address, source);
+
+    ALOGE("%s: wrapped_stream = %p", __func__, WRAPPED_STREAM_IN(in));
     if(ret < 0)
         goto err_open;
 
@@ -474,6 +526,10 @@ static int adev_close(hw_device_t *dev)
     return 0;
 }
 
+void (*shim__ZN7android16AudioHardwareANM13muteAllSoundsEv)(struct AudioHardwareANM *mANM);
+
+extern "C" void *gHandle;
+
 static int adev_open(const hw_module_t* module, const char* name,
                      hw_device_t** device)
 {
@@ -491,10 +547,26 @@ static int adev_open(const hw_module_t* module, const char* name,
 
     ret = load_vendor_module(module, name, (hw_device_t**) &adev->wrapped_device,
                              AUDIO_HARDWARE_MODULE_ID_PRIMARY);
-    if(ret) {
+
+    if (ret) {
         free(adev);
         return ret;
     }
+
+    audio_hw_device_sec *legacy_device = (audio_hw_device_sec *)adev->wrapped_device;
+    struct AudioHardwareANM *mANM = legacy_device->mANM;
+    ALOGE("%s: mIsMono: %d, mFormat: %d, mTtyMode: %d, mChannelMask: %d", __func__, mANM->mIsMono, mANM->mFormat, mANM->mTtyMode, mANM->mChannelMask);
+    //_ZN7android16AudioHardwareANM13muteAllSoundsEv
+
+    if (gHandle)
+       shim__ZN7android16AudioHardwareANM13muteAllSoundsEv = (void(*)(struct AudioHardwareANM *mANM))dlsym(gHandle, "_ZN7android16AudioHardwareANM13muteAllSoundsEv");
+    else
+       ALOGE("%s: handle is not valid!", __func__);
+
+    if (shim__ZN7android16AudioHardwareANM13muteAllSoundsEv) {
+       shim__ZN7android16AudioHardwareANM13muteAllSoundsEv(mANM);
+    } else
+       ALOGE("%s: couldn't fidn _ZN7android16AudioHardwareANM13muteAllSoundsEv symbol!", __func__);
 
     adev->device.common.tag = HARDWARE_DEVICE_TAG;
     adev->device.common.version = AUDIO_DEVICE_API_VERSION_2_0;
