@@ -31,14 +31,17 @@
 #include "include/4.0/hardware/audio.h"
 
 #include "audio_hw.h"
+#include "audiohw_symbols.h"
 //#include <hardware/audio.h>
 
 
 #include <hardware/hardware.h>
 #include <system/audio.h>
 
-#include <hardware_legacy/AudioHardwareInterface.h>
-#include <hardware_legacy/AudioSystemLegacy.h>
+#include "audiohw_symbols.cpp"
+
+//#include <hardware_legacy/AudioHardwareInterface.h>
+//#include <hardware_legacy/AudioSystemLegacy.h>
 
 extern "C" void *gHandle;
 
@@ -533,6 +536,8 @@ static int adev_close(hw_device_t *dev)
     return 0;
 }
 
+//extern void (*_ZN7android16AudioHardwareANM13muteAllSoundsEv)(void);
+
 static int adev_open(const hw_module_t* module, const char* name,
                      hw_device_t** device)
 {
@@ -540,6 +545,7 @@ static int adev_open(const hw_module_t* module, const char* name,
     int ret;
 
     ALOGI("Wrapping vendor audio primary");
+    //_ZN7android16AudioHardwareANM13muteAllSoundsEv();
 
     if (strcmp(name, AUDIO_HARDWARE_INTERFACE) != 0)
         return -EINVAL;
@@ -558,9 +564,13 @@ static int adev_open(const hw_module_t* module, const char* name,
 
     audio_hw_device_sec *legacy_device = (audio_hw_device_sec *)adev->wrapped_device;
     gANM = legacy_device->mANM;
+
+     android::AudioHardwareANM::muteAllSounds(gANM);
+    //_ZN7android16AudioHardwareANM13muteAllSoundsEv(gANM);
+    //android::AudioHardwareANM::muteAllSounds(gANM);
     ALOGE("%s: mIsMono: %d, mFormat: %d, mTtyMode: %d, mChannelMask: %d", __func__, gANM->mIsMono, gANM->mFormat, gANM->mTtyMode, gANM->mChannelMask);
     //_ZN7android16AudioHardwareANM13muteAllSoundsEv
-
+#if 0
     if (gHandle) {
        shim__ZN7android16AudioHardwareANM13muteAllSoundsEv = (void(*)(struct AudioHardwareANM *gANM))dlsym(gHandle, "_ZN7android16AudioHardwareANM13muteAllSoundsEv");
        shim__ZN7android16AudioHardwareANM15openInputStreamE15audio_devices_tP12audio_configPi =
@@ -579,6 +589,7 @@ static int adev_open(const hw_module_t* module, const char* name,
 
     if (!shim__ZN7android16AudioHardwareANM15openInputStreamE15audio_devices_tP12audio_configPi)
        ALOGE("%s: couldn't find shim__ZN7android16AudioHardwareANM15openInputStreamE15audio_devices_tP12audio_configPi symbol!", __func__);
+#endif
 
     adev->device.common.tag = HARDWARE_DEVICE_TAG;
     adev->device.common.version = AUDIO_DEVICE_API_VERSION_2_0;

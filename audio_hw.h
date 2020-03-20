@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+#ifndef _AUDIOHW
+#define _AUDIOHW
+
 #define DEFAULT_IN_SAMPLE_RATE (8000)
 #define DEFAULT_OUT_SAMPLING_RATE 44100
 
@@ -130,3 +133,4 @@ struct __attribute__((aligned(4))) AudioStreamInANM
   bool mReadInProgress;
 };
 
+#endif

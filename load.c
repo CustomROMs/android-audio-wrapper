@@ -15,6 +15,7 @@
  */
 
 #include <hardware/hardware.h>
+#include <hardware/audio.h>
 #include <dlfcn.h>
 #include <errno.h>
 
@@ -51,7 +52,7 @@ static int load_simple(const char *path,
     gHandle = handle;
 
     /* Get the address of the struct hal_module_info. */
-    const char *sym = HAL_MODULE_INFO_SYM_AS_STR;
+    const char *sym = "HMI";
     hmi = (struct hw_module_t *)dlsym(handle, sym);
     if (hmi == NULL) {
         ALOGE("load: couldn't find symbol %s", sym);
@@ -80,7 +81,6 @@ static int load_simple(const char *path,
 
     return status;
 }
-
 
 int hw_get_module_by_path2(char *path, const struct hw_module_t **module)
 {
