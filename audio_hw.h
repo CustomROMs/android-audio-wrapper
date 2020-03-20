@@ -20,6 +20,16 @@
 #define DEFAULT_IN_SAMPLE_RATE (8000)
 #define DEFAULT_OUT_SAMPLING_RATE 44100
 
+#include <hardware_legacy/AudioHardwareInterface.h>
+
+namespace android {
+	typedef int adm_api_type_t;
+	typedef int notification_type_t;
+	class ApiHistoryItem;
+	class DeviceMap;
+	class RoutingInfo;
+}
+
 /* 144 */
 struct audio_hw_device_sec
 {
