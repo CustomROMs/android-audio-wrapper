@@ -42,10 +42,8 @@ LOCAL_SRC_FILES := \
 #    audio_hw_hal.cpp
 
 LOCAL_SHARED_LIBRARIES := \
-    libaudiohw libste_adm libhardware liblog libutils libdl
+    libste_adm libhardware liblog libutils libdl
 
-LOCAL_LDLIBS := -laudiohw
-LOCAL_LDFLAGS := -Wl,--unresolved-symbols=ignore-in-object-files
 LOCAL_STATIC_LIBRARIES := libmedia_helper
 
 LOCAL_CFLAGS := $(L_CFLAGS)

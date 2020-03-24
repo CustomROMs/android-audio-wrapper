@@ -24,6 +24,11 @@
 
 void *gHandle = NULL;
 
+void libEvtLoading(void) __attribute__((constructor));
+void libEvtUnloading(void) __attribute__((destructor));
+
+void (*_ZN7android16AudioHardwareANM13muteAllSoundsEv)(struct AudioHardwareANM*);
+
 /**
  * Load the file defined by the variant and if successful
  * return the dlopen handle and the hmi.
@@ -50,6 +55,11 @@ static int load_simple(const char *path,
     }
 
     gHandle = handle;
+
+    _ZN7android16AudioHardwareANM13muteAllSoundsEv = dlsym(gHandle, "_ZN7android16AudioHardwareANM13muteAllSoundsEv");
+    if (!_ZN7android16AudioHardwareANM13muteAllSoundsEv) {
+        ALOGE("%s: _ZN7android16AudioHardwareANM13muteAllSoundsEv == NULL!!!", __func__);
+    }
 
     /* Get the address of the struct hal_module_info. */
     const char *sym = "HMI";
