@@ -17,7 +17,7 @@ int _ZN7android17AudioHardwareBase7setModeEi(struct AudioHardwareANM *ANM, int m
 int _ZN7android17AudioHardwareBase15getMasterVolumeEPf(struct AudioHardwareANM *ANM, float* volume);
 int _ZN7android17AudioHardwareBase9dumpStateEiRKNS_6VectorINS_8String16EEE(struct AudioHardwareANM *ANM, int fd, const Vector<String16>& args);
 int _ZN7android17AudioHardwareBase13setParametersERKNS_7String8E(struct AudioHardwareANM *ANM, const String8& keyValuePairs);
-int _ZN7android17AudioHardwareBase13getParametersERKNS_7String8E(struct AudioHardwareANM *ANM, const String8& keyValuePairs);
+char *_ZN7android17AudioHardwareBase13getParametersERKNS_7String8E(struct AudioHardwareANM *ANM, const String8& keyValuePairs);
 int _ZN7android17AudioHardwareBase18getInputBufferSizeEjii(struct AudioHardwareANM *ANM, uint32_t sampleRate, int format, int channelCount);
 }
 
@@ -35,7 +35,7 @@ namespace android {
 				int setParameters(struct AudioHardwareANM *ANM, const String8& keyValuePairs) {
 					return _ZN7android17AudioHardwareBase13setParametersERKNS_7String8E(ANM, keyValuePairs);
 				}
-				int getParameters(struct AudioHardwareANM *ANM, const String8& keyValuePairs) {
+				char *getParameters(struct AudioHardwareANM *ANM, const String8& keyValuePairs) {
 					return _ZN7android17AudioHardwareBase13getParametersERKNS_7String8E(ANM, keyValuePairs);
 				}
 				int getInputBufferSize(struct AudioHardwareANM *ANM, uint32_t sampleRate, int format, int channelCount) {
@@ -104,7 +104,7 @@ void _ZN7android16AudioHardwareANM11childNotifyEbNS_19notification_type_tEPKv(st
 void _ZN7android16AudioHardwareANM4dumpEiRKNS_6VectorINS_8String16EEE(struct AudioHardwareANM *ANM, int a1, android::Vector<android::String16> const& a2);
 void _ZN7android16AudioHardwareANM8askChildEPKcb(struct AudioHardwareANM *ANM, char const* a1, bool a2);
 void _ZN7android16AudioHardwareANM15getNumParameterEPKcRj(struct AudioHardwareANM *ANM, char const* a1, unsigned int& a2);
-void _ZN7android16AudioHardwareANM13getParametersERKNS_7String8E(struct AudioHardwareANM *ANM, android::String8 const& a1);
+char *_ZN7android16AudioHardwareANM13getParametersERKNS_7String8E(struct AudioHardwareANM *ANM, android::String8 const& a1);
 int _ZN7android16AudioHardwareANM13setParametersERKNS_7String8E(struct AudioHardwareANM *ANM, android::String8 const& keyValuePair);
 void _ZN7android16AudioHardwareANM17closeOutputStreamEPNS_14AudioStreamOutE(struct AudioHardwareANM *ANM, android_audio_legacy::AudioStreamOut* a1);
 void _ZN7android16AudioHardwareANM16openOutputStreamE15audio_devices_t20audio_output_flags_tP12audio_configPi(struct AudioHardwareANM *ANM, audio_devices_t a1, audio_output_flags_t a2, audio_config* a3, int* a4);
@@ -134,7 +134,7 @@ int _ZN7android16AudioStreamInANM4dumpEiRKNS_6VectorINS_8String16EEE(struct Audi
 int _ZN7android16AudioStreamInANM9doSetMuteEb(struct AudioStreamInANM *inANM, bool a1);
 int _ZN7android16AudioStreamInANMC2EPNS_16AudioHardwareANME(struct AudioStreamInANM *inANM, struct AudioHardwareANM* a1);
 int _ZN7android16AudioStreamInANM15getNumParameterEPKcRj(struct AudioStreamInANM *inANM, char const* a1, unsigned int& a2);
-int _ZN7android16AudioStreamInANM13getParametersERKNS_7String8E(struct AudioStreamInANM *inANM, android::String8 const& a1);
+char *_ZN7android16AudioStreamInANM13getParametersERKNS_7String8E(struct AudioStreamInANM *inANM, android::String8 const& a1);
 int _ZN7android16AudioStreamInANM13reconnect_admEv(struct AudioStreamInANM *inANM);
 int _ZN7android16AudioStreamInANM14postOpenDeviceEv(struct AudioStreamInANM *inANM);
 int _ZN7android16AudioStreamInANM11openDevicesEv(struct AudioStreamInANM *inANM);
@@ -226,7 +226,7 @@ namespace android {
 		int getNumParameter(struct AudioStreamInANM *inANM, char const* a1, unsigned int& a2) {
 			return _ZN7android16AudioStreamInANM15getNumParameterEPKcRj(inANM, a1, a2);
 		}
-		int getParameters(struct AudioStreamInANM *inANM, String8 const& a1) {
+		char *getParameters(struct AudioStreamInANM *inANM, String8 const& a1) {
 			return _ZN7android16AudioStreamInANM13getParametersERKNS_7String8E(inANM, a1);
 		}
 		int reconnect_adm(struct AudioStreamInANM *inANM) {
@@ -580,8 +580,8 @@ namespace android {
 		void getNumParameter(struct AudioHardwareANM *ANM, char const* a1, unsigned int& a2) {
 			_ZN7android16AudioHardwareANM15getNumParameterEPKcRj(gANM, a1, a2);
 		}
-		void getParameters(struct AudioHardwareANM *ANM, android::String8 const& a1) {
-			_ZN7android16AudioHardwareANM13getParametersERKNS_7String8E(gANM, a1);
+		char *getParameters(struct AudioHardwareANM *ANM, android::String8 const& a1) {
+			return _ZN7android16AudioHardwareANM13getParametersERKNS_7String8E(gANM, a1);
 		}
 		
 		int *outputCheckIdx(struct vector *outputs, int outputIdx)

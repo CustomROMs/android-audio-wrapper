@@ -415,17 +415,15 @@ static int adev_set_parameters(struct audio_hw_device *dev, const char *kvpairs)
 static char * adev_get_parameters(const struct audio_hw_device *dev,
                                   const char *keys)
 {
-    char *kvpairs = WRAPPED_DEVICE_CALL(dev, get_parameters, keys);
-	ALOGI("%s: keys: %s, kvpairs = %s", __FUNCTION__, keys, kvpairs);
-    //char *fixed_kvpairs = fixup_audio_parameters(kvpairs, ICS_TO_JB);
-    //free(kvpairs);
-    return kvpairs; //fixed_kvpairs;
+    String8 s8;
+
+    s8 = android::AudioHardwareANM::getParameters(gANM, String8(keys));
+    return strdup(s8.string());
 }
 
 static uint32_t adev_get_supported_devices(const struct audio_hw_device *dev)
 {
-    uint32_t devices = WRAPPED_DEVICE_CALL(dev, get_supported_devices);
-    return convert_audio_devices(devices, ICS_TO_JB);
+   return 0x87FE1C7F;
 }
 
 static int adev_init_check(const struct audio_hw_device *dev)
@@ -461,23 +459,17 @@ static int adev_set_master_mute(struct audio_hw_device *dev, bool muted) {
 
 static int adev_set_mode(struct audio_hw_device *dev, audio_mode_t mode)
 {
-	struct audio_hw_device_sec *adev = (struct audio_hw_device_sec *)dev;
-	ALOGE("%s: mode=%d", __func__, mode);
-	//RETURN_WRAPPED_DEVICE_CALL(dev, set_mode, mode);
-    return android::AudioHardwareANM::setMode(adev->mANM, mode);
+    return android::AudioHardwareANM::setMode(gANM, mode);
 }
 
 static int adev_set_mic_mute(struct audio_hw_device *dev, bool state)
 {
-	struct audio_hw_device_sec *adev = (struct audio_hw_device_sec *)dev;
     return android::AudioHardwareANM::setMicMute(gANM, state);
-	//RETURN_WRAPPED_DEVICE_CALL(dev, set_mic_mute, state);
 }
 
 static int adev_get_mic_mute(const struct audio_hw_device *dev, bool *state)
 {
-	struct audio_hw_device_sec *adev = (struct audio_hw_device_sec *)dev;
-	*state = adev->mANM->mIsMicMuted;
+	*state = gANM->mIsMicMuted;
 	return 0;
 }
 
@@ -502,26 +494,15 @@ static int adev_open_input_stream(struct audio_hw_device *dev,
                                   audio_source_t source __unused)
 {
     struct wrapper_stream_in *in;
-    struct legacy_stream_in *lin;
     int status;
     int ret;
 
     ALOGI("%s: devices 0x%x", __FUNCTION__, devices);
 
-    lin = (struct legacy_stream_in *)calloc(1, sizeof(*in));
-    if (!lin)
-        return -ENOMEM;
-
     in = (struct wrapper_stream_in *)calloc(1, sizeof(struct wrapper_stream_in));
 
     if (!in)
         return -ENOMEM;
-
-
-    //struct AudioStreamInANM *(*shim__ZN7android16AudioHardwareANM15openInputStreamE15audio_devices_tP12audio_configPi)(audio_devices_t devices, audio_config* config, status_t* status)
-    lin->legacy_in = (struct AudioStreamInANM*)shim__ZN7android16AudioHardwareANM15openInputStreamE15audio_devices_tP12audio_configPi(gANM, devices, config, &status);
-
-    //WRAPPED_STREAM_IN(in) = (struct wrapper::audio_stream_in *)lin;
 
     ret = WRAPPED_DEVICE(dev)->open_input_stream(WRAPPED_DEVICE(dev), handle, devices, config,
                               &WRAPPED_STREAM_IN(in), flags, address, source);
@@ -545,8 +526,6 @@ static int adev_open_input_stream(struct audio_hw_device *dev,
     in->stream.set_gain = in_set_gain;
     in->stream.read = in_read;
     in->stream.get_input_frames_lost = in_get_input_frames_lost;
-	
-	//ALOGE("%s: mInputs.size() = %d", __func__, gANM->mInputs.size());
 
     *stream_in = &in->stream;
     return 0;
@@ -572,7 +551,8 @@ static int adev_dump(const audio_hw_device_t *dev, int fd)
 static int adev_close(hw_device_t *dev)
 {
     ALOGI("%s", __FUNCTION__);
-    WRAPPED_DEVICE(dev)->common.close((hw_device_t*)&(WRAPPED_DEVICE(dev)));
+	if (gANM)
+		gANM->destructor();
     free(dev);
     return 0;
 }

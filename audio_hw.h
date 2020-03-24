@@ -159,9 +159,9 @@ struct AudioStreamOutANM;
 struct __attribute__((aligned(4))) AudioHardwareANM
 {
   int mIsMicMuted;
+  void (*destructor)(void);
   bool unk_xx1;
   bool index_start1;
-  int unk_idx1;
   int unk_idx2;
   int unk_idx3;
   /* Lists if output and input descriptors */
