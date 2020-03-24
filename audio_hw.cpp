@@ -31,7 +31,7 @@
 #include "include/4.0/hardware/audio.h"
 
 #include "audio_hw.h"
-#include "audiohw_symbols.h"
+//#include "audiohw_symbols.h"
 //#include <hardware/audio.h>
 
 
@@ -406,7 +406,7 @@ static int adev_set_parameters(struct audio_hw_device *dev, const char *kvpairs)
 	android::String8 s(kvpairs);
 	ALOGI("%s: kvpairs = %s", __FUNCTION__, kvpairs);
 	
-	return android::AudioHardwareANM::setParameters(adev->mANM, s);
+	return android::AudioHardwareANM1::setParameters(adev->mANM, s);
 }
 
 static char * adev_get_parameters(const struct audio_hw_device *dev,
@@ -414,7 +414,7 @@ static char * adev_get_parameters(const struct audio_hw_device *dev,
 {
     String8 s8;
 
-    s8 = android::AudioHardwareANM::getParameters(gANM, String8(keys));
+    s8 = android::AudioHardwareANM1::getParameters(gANM, String8(keys));
     return strdup(s8.string());
 }
 
@@ -426,14 +426,14 @@ static uint32_t adev_get_supported_devices(const struct audio_hw_device *dev)
 static int adev_init_check(const struct audio_hw_device *dev)
 {
    struct audio_hw_device_sec *adev = (struct audio_hw_device_sec *)dev;
-   return android::AudioHardwareANM::initCheck(adev->mANM);
+   return android::AudioHardwareANM1::initCheck(adev->mANM);
 }
 
 static int adev_set_voice_volume(struct audio_hw_device *dev, float volume)
 {
 	struct audio_hw_device_sec *adev = (struct audio_hw_device_sec *)dev;
 	ALOGE("%s: volume=%f", __func__, volume);
-    return android::AudioHardwareANM::setVoiceVolume(adev->mANM, volume);
+    return android::AudioHardwareANM1::setVoiceVolume(adev->mANM, volume);
 }
 
 static int adev_get_master_volume(struct audio_hw_device *dev, float *volume)
@@ -456,12 +456,12 @@ static int adev_set_master_mute(struct audio_hw_device *dev, bool muted) {
 
 static int adev_set_mode(struct audio_hw_device *dev, audio_mode_t mode)
 {
-    return android::AudioHardwareANM::setMode(gANM, mode);
+    return android::AudioHardwareANM1::setMode(gANM, mode);
 }
 
 static int adev_set_mic_mute(struct audio_hw_device *dev, bool state)
 {
-    return android::AudioHardwareANM::setMicMute(gANM, state);
+    return android::AudioHardwareANM1::setMicMute(gANM, state);
 }
 
 static int adev_get_mic_mute(const struct audio_hw_device *dev, bool *state)

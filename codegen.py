@@ -121,3 +121,6 @@ for mangled, demangled, args in symbols:
 	foos.append(foo)
 
 print(template % ("\n".join(externs), "\n".join(foos)))
+
+for mangled, demangled, args in symbols:
+	print("\tLOAD_SYMBOL(shim%s, \"%s\");" % (mangled, mangled))

@@ -22,6 +22,7 @@
 
 //#include <utils/KeyedVector.h>
 
+#ifdef __cplusplus
 //#if !defined(TEST)
 #include <hardware_legacy/AudioHardwareInterface.h>
 #include <hardware_legacy/AudioPolicyManagerBase.h>
@@ -38,6 +39,9 @@ using android_audio_legacy::AudioStreamOut;
 
 class AudioOutputDescriptor;
 class AudioInputDescriptor;
+#else
+#endif
+
 
 /**
  * TTY modes
@@ -52,7 +56,10 @@ typedef enum {
 
 #define STE_ADM_TTY_MODE_INVALID ((ste_adm_tty_mode_t)-1)
   
-extern "C" {
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 	int ste_adm_client_set_cscall_tty_mode(ste_adm_tty_mode_t tty_mode);
     int ste_adm_client_set_cscall_downstream_volume(int volume);
     int ste_adm_client_get_cscall_upstream_volume(int* volume);
@@ -75,10 +82,13 @@ extern "C" {
 		const char *toplevel_device2, const char *new_actual_device2);
     int ste_adm_client_set_toplevel_map(const char *toplevel_device, const char *actual_device);
     int ste_adm_set_cscall_loopback_mode(int mode, int codec);
+#ifdef __cplusplus
 }
+#endif
 
 #define UNKNOWN_ERROR  0x80000000
 
+#ifdef __cplusplus
 namespace android {
 	typedef int adm_api_type_t;
 	typedef int notification_type_t;
@@ -205,5 +215,6 @@ struct __attribute__((aligned(4))) AudioHardwareANM
   int mInputSource;
   int mFrameCount;
 };
+#endif
 
 #endif
