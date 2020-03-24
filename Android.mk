@@ -68,9 +68,26 @@ LOCAL_INCLUDES += hardware/libhardware/include
 
 LOCAL_INCLUDES += hardware/u8500/libutils_legacy
 #LOCAL_C_INCLUDES += hardware/u8500/libutils/include
-LOCAL_SHARED_LIBRARIES := libLog
+LOCAL_SHARED_LIBRARIES := libLog libaudiohw_test
 
 LOCAL_MODULE := audiohw_test
 LOCAL_MODULE_TAGS := optional
 
 include $(BUILD_EXECUTABLE)
+
+include $(CLEAR_VARS)
+
+LOCAL_SRC_FILES := \
+       libtest.cpp
+
+LOCAL_INCLUDES := hardware/libhardware_legacy/include
+LOCAL_INCLUDES += hardware/libhardware/include
+
+LOCAL_INCLUDES += hardware/u8500/libutils_legacy
+#LOCAL_C_INCLUDES += hardware/u8500/libutils/include
+LOCAL_SHARED_LIBRARIES := libLog
+
+LOCAL_MODULE := libaudiohw_test
+LOCAL_MODULE_TAGS := optional
+
+include $(BUILD_SHARED_LIBRARY)

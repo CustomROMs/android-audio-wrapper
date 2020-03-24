@@ -29,6 +29,7 @@
 #include <utils/KeyedVector.h>
 
 using android::KeyedVector;
+using android::SortedVector;
 
 
 using android_audio_legacy::AudioStreamOut;
@@ -76,6 +77,8 @@ extern "C" {
     int ste_adm_set_cscall_loopback_mode(int mode, int codec);
 }
 
+#define UNKNOWN_ERROR  0x80000000
+
 namespace android {
 	typedef int adm_api_type_t;
 	typedef int notification_type_t;
@@ -107,111 +110,6 @@ struct audio_hw_device_sec
   void ( *close_input_stream)(struct audio_hw_device *dev, struct audio_stream_in *stream_in);
   int ( *dump)(const struct audio_hw_device *dev, int fd);
   struct AudioHardwareANM *mANM;
-};
-
-struct __attribute__((aligned(4))) vector {
-	struct AudioOutputDescriptor *desc;
-	int size;
-};
-
-/* 25 */
-struct __attribute__((aligned(4))) AudioHardwareANM
-{
-  int mIsMicMuted;
-  bool unk_xx1;
-  bool index_start1;
-  int unk_idx1;
-  int unk_idx2;
-  int unk_idx3;
-  /* Lists if output and input descriptors */
-  KeyedVector<audio_io_handle_t, AudioOutputDescriptor *> mOutputs;
-  KeyedVector<audio_io_handle_t, AudioInputDescriptor *> mInputs;
-
-  bool unk1;
-  bool unk100;
-  bool unk101;
-  bool unk102;
-  int unk2;
-  int csCallState;
-  pthread_mutex_t mutex;
-  struct timeval *time;
-  int unk999;
-  int unk5;
-  char unk6[16];
-  char unk7[16];
-  bool mBtHeadsetEnabled;
-  bool unk9;
-  bool unk10;
-  bool mExtraVolumeEnabled;
-  bool unk12;
-  bool mIsMono;
-  bool unk14;
-  bool unk15;
-  ste_adm_tty_mode_t mTtyMode;
-  char unk_xx[496];
-  int unk17;
-  bool unk18;
-  bool unk20;
-  bool unk21;
-  bool unk22;
-  int unk23;
-  int devices1;
-  int devices2;
-  int mFormat;
-  int mChannelMask;
-  int mChannelMask2;
-  int mInputSource;
-  int mFrameCount;
-};
-
-struct __attribute__((aligned(4))) AudioHardwareANM1
-{
-  int isMicMuted;
-  bool unk_xx1;
-  bool index_start1;
-  int unk_idx1;
-  int unk_idx2;
-  int unk_idx3;
-  /* Lists if output and input descriptors */
-  int mOutputs[5];
-  //Vector<int*> mOutputs;
-  struct vector mInputs;
-
-  bool unk1;
-  bool unk100;
-  bool unk101;
-  bool unk102;
-  int unk2;
-  int csCallState;
-  pthread_mutex_t mutex;
-  struct timeval *time;
-  int unk999;
-  int unk5;
-  char unk6[16];
-  char unk7[16];
-  bool mBtHeadsetEnabled;
-  bool unk9;
-  bool unk10;
-  bool mExtraVolumeEnabled;
-  bool unk12;
-  bool mIsMono;
-  bool unk14;
-  bool unk15;
-  ste_adm_tty_mode_t mTtyMode;
-  char unk_xx[496];
-  int unk17;
-  bool unk18;
-  bool unk20;
-  bool unk21;
-  bool unk22;
-  int unk23;
-  int devices1;
-  int devices2;
-  int mFormat;
-  int mChannelMask;
-  int mChannelMask2;
-  int mInputSource;
-  int mFrameCount;
 };
 
 
@@ -253,6 +151,59 @@ struct __attribute__((aligned(4))) AudioStreamInANM
   int unk26;
   bool mDeviceIsWrong;
   bool mReadInProgress;
+};
+
+struct AudioStreamOutANM;
+
+/* 25 */
+struct __attribute__((aligned(4))) AudioHardwareANM
+{
+  int mIsMicMuted;
+  bool unk_xx1;
+  bool index_start1;
+  int unk_idx1;
+  int unk_idx2;
+  int unk_idx3;
+  /* Lists if output and input descriptors */
+  int mInputs[5];
+  int mOutputs[5];
+  //SortedVector<struct AudioStreamOutANM*> mOutputs;
+
+  bool unk1;
+  bool unk100;
+  bool unk101;
+  bool unk102;
+  int mUpstreamVolume;
+  int csCallState;
+  pthread_mutex_t mutex;
+  struct timeval *time;
+  int unk999;
+  int unk5;
+  char unk6[16];
+  char unk7[16];
+  bool mBtHeadsetEnabled;
+  bool unk9;
+  bool unk10;
+  bool mExtraVolumeEnabled;
+  bool unk12;
+  bool mIsMono;
+  bool unk14;
+  bool unk15;
+  ste_adm_tty_mode_t mTtyMode;
+  char unk_xx[496];
+  int unk17;
+  bool unk18;
+  bool unk20;
+  bool unk21;
+  bool unk22;
+  int unk23;
+  int devices1;
+  int devices2;
+  int mFormat;
+  int mChannelMask;
+  int mChannelMask2;
+  int mInputSource;
+  int mFrameCount;
 };
 
 #endif

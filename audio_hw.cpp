@@ -40,12 +40,20 @@
 
 #include "audiohw_symbols.cpp"
 
+#include <utils/KeyedVector.h>
+
+using android::KeyedVector;
+using android::SortedVector;
+
 //#include <hardware_legacy/AudioHardwareInterface.h>
 //#include <hardware_legacy/AudioSystemLegacy.h>
 
 extern "C" void *gHandle;
 
 struct AudioHardwareANM *gANM;
+
+SortedVector<struct AudioStreamInANM*> *gInputs;
+SortedVector<struct AudioStreamOutANM*> *gOutputs;
 
 void (*shim__ZN7android16AudioHardwareANM13muteAllSoundsEv)(struct AudioHardwareANM *mANM);
 void *(*shim__ZN7android16AudioHardwareANM15openInputStreamE15audio_devices_tP12audio_configPi)(struct AudioHardwareANM *mANM, audio_devices_t devices, audio_config* config, int* status);
@@ -461,7 +469,9 @@ static int adev_set_mode(struct audio_hw_device *dev, audio_mode_t mode)
 
 static int adev_set_mic_mute(struct audio_hw_device *dev, bool state)
 {
-    RETURN_WRAPPED_DEVICE_CALL(dev, set_mic_mute, state);
+	struct audio_hw_device_sec *adev = (struct audio_hw_device_sec *)dev;
+    return android::AudioHardwareANM::setMicMute(gANM, state);
+	//RETURN_WRAPPED_DEVICE_CALL(dev, set_mic_mute, state);
 }
 
 static int adev_get_mic_mute(const struct audio_hw_device *dev, bool *state)
@@ -535,6 +545,8 @@ static int adev_open_input_stream(struct audio_hw_device *dev,
     in->stream.set_gain = in_set_gain;
     in->stream.read = in_read;
     in->stream.get_input_frames_lost = in_get_input_frames_lost;
+	
+	//ALOGE("%s: mInputs.size() = %d", __func__, gANM->mInputs.size());
 
     *stream_in = &in->stream;
     return 0;
@@ -593,10 +605,13 @@ static int adev_open(const hw_module_t* module, const char* name,
 
     audio_hw_device_sec *legacy_device = (audio_hw_device_sec *)adev->wrapped_device;
     gANM = legacy_device->mANM;
+	gInputs = (SortedVector<struct AudioStreamInANM*> *)gANM->mInputs;
+	gOutputs = (SortedVector<struct AudioStreamOutANM*> *)gANM->mOutputs;
 
      //android::AudioHardwareANM::muteAllSounds(gANM);
     //_ZN7android16AudioHardwareANM13muteAllSoundsEv(gANM);
     //android::AudioHardwareANM::muteAllSounds(gANM);
+	//android::AudioHardwareANM::setMicMute(gANM, true);
     ALOGE("%s: mIsMono: %d, mFormat: %d, mTtyMode: %d, mChannelMask: %d", __func__, gANM->mIsMono, gANM->mFormat, gANM->mTtyMode, gANM->mChannelMask);
     //_ZN7android16AudioHardwareANM13muteAllSoundsEv
 #if 0

@@ -10,6 +10,8 @@ using android::String8;
 using android::String16;
 using android::Vector;
 
+class DeviceList;
+
 extern "C" {
 int _ZN7android17AudioHardwareBase7setModeEi(struct AudioHardwareANM *ANM, int mode);
 int _ZN7android17AudioHardwareBase15getMasterVolumeEPf(struct AudioHardwareANM *ANM, float* volume);
@@ -73,7 +75,7 @@ void _ZN7android16AudioHardwareANM19getCurrentCallInputEv(struct AudioHardwareAN
 void _ZN7android16AudioHardwareANM14getActiveStateEi(struct AudioHardwareANM *ANM, int a1);
 void _ZN7android16AudioHardwareANM4lockEv(struct AudioHardwareANM *ANM);
 void _ZN7android16AudioHardwareANM6unlockEv(struct AudioHardwareANM *ANM);
-void _ZN7android16AudioHardwareANM10setMicMuteEb(struct AudioHardwareANM *ANM, bool a1);
+int _ZN7android16AudioHardwareANM10setMicMuteEb(struct AudioHardwareANM *ANM, bool a1);
 void _ZN7android16AudioHardwareANM9setRxMuteEb(struct AudioHardwareANM *ANM, bool a1);
 void _ZN7android16AudioHardwareANM15setRingbackMuteEb(struct AudioHardwareANM *ANM, bool a1);
 void _ZN7android16AudioHardwareANM10onRingbackEb(struct AudioHardwareANM *ANM, bool a1);
@@ -108,7 +110,185 @@ void _ZN7android16AudioHardwareANM17closeOutputStreamEPNS_14AudioStreamOutE(stru
 void _ZN7android16AudioHardwareANM16openOutputStreamE15audio_devices_t20audio_output_flags_tP12audio_configPi(struct AudioHardwareANM *ANM, audio_devices_t a1, audio_output_flags_t a2, audio_config* a3, int* a4);
 }
 
+extern "C" {
+int _ZN7android16AudioStreamInANM6isFakeEv(struct AudioStreamInANM *inANM);
+int _ZN7android16AudioStreamInANM8isActiveEv(struct AudioStreamInANM *inANM);
+int _ZN7android16AudioStreamInANM7suspendEv(struct AudioStreamInANM *inANM);
+int _ZN7android16AudioStreamInANM6resumeEi(struct AudioStreamInANM *inANM, int a1);
+int _ZN7android16AudioStreamInANM22suspendIfDeviceIsWrongEj(struct AudioStreamInANM *inANM, unsigned int a1);
+int _ZN7android16AudioStreamInANM17getDevicePerStateEijPNS_16AudioHardwareANME(struct AudioStreamInANM *inANM, int a1, unsigned int a2, struct AudioHardwareANM* a3);
+int _ZN7android16AudioStreamInANM7setMuteEb(struct AudioStreamInANM *inANM, bool a1);
+int _ZN7android16AudioStreamInANM6unfakeEv(struct AudioStreamInANM *inANM);
+int _ZN7android16AudioStreamInANMC1EPNS_16AudioHardwareANME(struct AudioStreamInANM *inANM, struct AudioHardwareANM* a1);
+int _ZN7android16AudioStreamInANM5setupEPiPjS2_j(struct AudioStreamInANM *inANM, int* a1, unsigned int* a2, unsigned int* a3, unsigned int a4);
+int _ZN7android16AudioStreamInANM11updateStateEi(struct AudioStreamInANM *inANM, int a1);
+int _ZN7android16AudioStreamInANM4fakeEv(struct AudioStreamInANM *inANM);
+int _ZNK7android16AudioStreamInANM10sampleRateEv(struct AudioStreamInANM *inANM);
+int _ZNK7android16AudioStreamInANM16calc_buffer_sizeEv(struct AudioStreamInANM *inANM);
+int _ZNK7android16AudioStreamInANM8channelsEv(struct AudioStreamInANM *inANM);
+int _ZNK7android16AudioStreamInANM6formatEv(struct AudioStreamInANM *inANM);
+int _ZNK7android16AudioStreamInANM18getInputFramesLostEv(struct AudioStreamInANM *inANM);
+int _ZN7android16AudioStreamInANM7setGainEf(struct AudioStreamInANM *inANM, float a1);
+int _ZNK7android16AudioStreamInANM10bufferSizeEv(struct AudioStreamInANM *inANM);
+int _ZN7android16AudioStreamInANM4dumpEiRKNS_6VectorINS_8String16EEE(struct AudioStreamInANM *inANM, int a1, Vector<String16> const& a2);
+int _ZN7android16AudioStreamInANM9doSetMuteEb(struct AudioStreamInANM *inANM, bool a1);
+int _ZN7android16AudioStreamInANMC2EPNS_16AudioHardwareANME(struct AudioStreamInANM *inANM, struct AudioHardwareANM* a1);
+int _ZN7android16AudioStreamInANM15getNumParameterEPKcRj(struct AudioStreamInANM *inANM, char const* a1, unsigned int& a2);
+int _ZN7android16AudioStreamInANM13getParametersERKNS_7String8E(struct AudioStreamInANM *inANM, android::String8 const& a1);
+int _ZN7android16AudioStreamInANM13reconnect_admEv(struct AudioStreamInANM *inANM);
+int _ZN7android16AudioStreamInANM14postOpenDeviceEv(struct AudioStreamInANM *inANM);
+int _ZN7android16AudioStreamInANM11openDevicesEv(struct AudioStreamInANM *inANM);
+int _ZN7android16AudioStreamInANM23transitionAffectsCSCallEii(struct AudioStreamInANM *inANM, int a1, int a2);
+int _ZN7android16AudioStreamInANM16liveOrgansUpdateEb(struct AudioStreamInANM *inANM, bool a1);
+int _ZN7android16AudioStreamInANM12closeDevicesEv(struct AudioStreamInANM *inANM);
+int _ZN7android16AudioStreamInANM7standbyEv(struct AudioStreamInANM *inANM);
+int _ZN7android16AudioStreamInANMD2Ev(struct AudioStreamInANM *inANM);
+int _ZN7android16AudioStreamInANMD0Ev(struct AudioStreamInANM *inANM);
+int _ZN7android16AudioStreamInANMD1Ev(struct AudioStreamInANM *inANM);
+int _ZN7android16AudioStreamInANM7restoreEv(struct AudioStreamInANM *inANM);
+int _ZN7android16AudioStreamInANM6doReadEPvl(struct AudioStreamInANM *inANM, void* a1, long a2);
+int _ZN7android16AudioStreamInANM4readEPvl(struct AudioStreamInANM *inANM, void* a1, long a2);
+int _ZN7android16AudioStreamInANM17refreshDeviceListEPNS_10DeviceListEijiPNS_16AudioHardwareANME(struct AudioStreamInANM *inANM, DeviceList* a1, int a2, unsigned int a3, int a4, struct AudioHardwareANM* a5);
+int _ZN7android16AudioStreamInANM16updateDeviceListEbb(struct AudioStreamInANM *inANM, bool a1, bool a2);
+int _ZN7android16AudioStreamInANM10willChangeEijiRbS1_(struct AudioStreamInANM *inANM, int a1, unsigned int a2, int a3, bool& a4, bool& a5);
+int _ZN7android16AudioStreamInANM14changeDevice_lEijib(struct AudioStreamInANM *inANM, int a1, unsigned int a2, int a3, bool a4);
+int _ZN7android16AudioStreamInANM17changeDeviceForceEv(struct AudioStreamInANM *inANM);
+int _ZN7android16AudioStreamInANM32changeDeviceRoutesAndInputSourceEjib(struct AudioStreamInANM *inANM, unsigned int a1, int a2, bool a3);
+int _ZN7android16AudioStreamInANM13setParametersERKNS_7String8E(struct AudioStreamInANM *inANM, android::String8 const& a1);
+int _ZN7android16AudioStreamInANM17changeDeviceStateEi(struct AudioStreamInANM *inANM, int a1);
+}
+
+namespace android {
+	namespace AudioStreamInANM {
+		int isFake(struct AudioStreamInANM *inANM) {
+			return _ZN7android16AudioStreamInANM6isFakeEv(inANM);
+		}
+		int isActive(struct AudioStreamInANM *inANM) {
+			return _ZN7android16AudioStreamInANM8isActiveEv(inANM);
+		}
+		int suspend(struct AudioStreamInANM *inANM) {
+			return _ZN7android16AudioStreamInANM7suspendEv(inANM);
+		}
+		int resume(struct AudioStreamInANM *inANM, int a1) {
+			return _ZN7android16AudioStreamInANM6resumeEi(inANM, a1);
+		}
+		int suspendIfDeviceIsWrong(struct AudioStreamInANM *inANM, unsigned int a1) {
+			return _ZN7android16AudioStreamInANM22suspendIfDeviceIsWrongEj(inANM, a1);
+		}
+		int getDevicePerState(struct AudioStreamInANM *inANM, int a1, unsigned int a2, struct AudioHardwareANM* a3) {
+			return _ZN7android16AudioStreamInANM17getDevicePerStateEijPNS_16AudioHardwareANME(inANM, a1, a2, a3);
+		}
+		int setMute(struct AudioStreamInANM *inANM, bool a1) {
+			return _ZN7android16AudioStreamInANM7setMuteEb(inANM, a1);
+		}
+		int unfake(struct AudioStreamInANM *inANM) {
+			return _ZN7android16AudioStreamInANM6unfakeEv(inANM);
+		}
+		int setup(struct AudioStreamInANM *inANM, int* a1, unsigned int* a2, unsigned int* a3, unsigned int a4) {
+			return _ZN7android16AudioStreamInANM5setupEPiPjS2_j(inANM, a1, a2, a3, a4);
+		}
+		int updateState(struct AudioStreamInANM *inANM, int a1) {
+			return _ZN7android16AudioStreamInANM11updateStateEi(inANM, a1);
+		}
+		int fake(struct AudioStreamInANM *inANM) {
+			return _ZN7android16AudioStreamInANM4fakeEv(inANM);
+		}
+		int sampleRate(struct AudioStreamInANM *inANM) {
+			return _ZNK7android16AudioStreamInANM10sampleRateEv(inANM);
+		}
+		int calc_buffer_size(struct AudioStreamInANM *inANM) {
+			return _ZNK7android16AudioStreamInANM16calc_buffer_sizeEv(inANM);
+		}
+		int channels(struct AudioStreamInANM *inANM) {
+			return _ZNK7android16AudioStreamInANM8channelsEv(inANM);
+		}
+		int format(struct AudioStreamInANM *inANM) {
+			return _ZNK7android16AudioStreamInANM6formatEv(inANM);
+		}
+		int getInputFramesLost(struct AudioStreamInANM *inANM) {
+			return _ZNK7android16AudioStreamInANM18getInputFramesLostEv(inANM);
+		}
+		int setGain(struct AudioStreamInANM *inANM, float a1) {
+			return _ZN7android16AudioStreamInANM7setGainEf(inANM, a1);
+		}
+		int bufferSize(struct AudioStreamInANM *inANM) {
+			return _ZNK7android16AudioStreamInANM10bufferSizeEv(inANM);
+		}
+		int dump(struct AudioStreamInANM *inANM, int a1, Vector<String16> const& a2) {
+			return _ZN7android16AudioStreamInANM4dumpEiRKNS_6VectorINS_8String16EEE(inANM, a1, a2);
+		}
+		int doSetMute(struct AudioStreamInANM *inANM, bool a1) {
+			return _ZN7android16AudioStreamInANM9doSetMuteEb(inANM, a1);
+		}
+		int AudioStreamInANM(struct AudioStreamInANM *inANM, struct AudioHardwareANM* a1) {
+			return _ZN7android16AudioStreamInANMC2EPNS_16AudioHardwareANME(inANM, a1);
+		}
+		int getNumParameter(struct AudioStreamInANM *inANM, char const* a1, unsigned int& a2) {
+			return _ZN7android16AudioStreamInANM15getNumParameterEPKcRj(inANM, a1, a2);
+		}
+		int getParameters(struct AudioStreamInANM *inANM, String8 const& a1) {
+			return _ZN7android16AudioStreamInANM13getParametersERKNS_7String8E(inANM, a1);
+		}
+		int reconnect_adm(struct AudioStreamInANM *inANM) {
+			return _ZN7android16AudioStreamInANM13reconnect_admEv(inANM);
+		}
+		int postOpenDevice(struct AudioStreamInANM *inANM) {
+			return _ZN7android16AudioStreamInANM14postOpenDeviceEv(inANM);
+		}
+		int openDevices(struct AudioStreamInANM *inANM) {
+			return _ZN7android16AudioStreamInANM11openDevicesEv(inANM);
+		}
+		int transitionAffectsCSCall(struct AudioStreamInANM *inANM, int a1, int a2) {
+			return _ZN7android16AudioStreamInANM23transitionAffectsCSCallEii(inANM, a1, a2);
+		}
+		int liveOrgansUpdate(struct AudioStreamInANM *inANM, bool a1) {
+			return _ZN7android16AudioStreamInANM16liveOrgansUpdateEb(inANM, a1);
+		}
+		int closeDevices(struct AudioStreamInANM *inANM) {
+			return _ZN7android16AudioStreamInANM12closeDevicesEv(inANM);
+		}
+		int standby(struct AudioStreamInANM *inANM) {
+			return _ZN7android16AudioStreamInANM7standbyEv(inANM);
+		}
+		int restore(struct AudioStreamInANM *inANM) {
+			return _ZN7android16AudioStreamInANM7restoreEv(inANM);
+		}
+		int doRead(struct AudioStreamInANM *inANM, void* a1, long a2) {
+			return _ZN7android16AudioStreamInANM6doReadEPvl(inANM, a1, a2);
+		}
+		int read(struct AudioStreamInANM *inANM, void* a1, long a2) {
+			return _ZN7android16AudioStreamInANM4readEPvl(inANM, a1, a2);
+		}
+		int refreshDeviceList(struct AudioStreamInANM *inANM, DeviceList* a1, int a2, unsigned int a3, int a4, struct AudioHardwareANM* a5) {
+			return _ZN7android16AudioStreamInANM17refreshDeviceListEPNS_10DeviceListEijiPNS_16AudioHardwareANME(inANM, a1, a2, a3, a4, a5);
+		}
+		int updateDeviceList(struct AudioStreamInANM *inANM, bool a1, bool a2) {
+			return _ZN7android16AudioStreamInANM16updateDeviceListEbb(inANM, a1, a2);
+		}
+		int willChange(struct AudioStreamInANM *inANM, int a1, unsigned int a2, int a3, bool& a4, bool& a5) {
+			return _ZN7android16AudioStreamInANM10willChangeEijiRbS1_(inANM, a1, a2, a3, a4, a5);
+		}
+		int changeDevice_l(struct AudioStreamInANM *inANM, int a1, unsigned int a2, int a3, bool a4) {
+			return _ZN7android16AudioStreamInANM14changeDevice_lEijib(inANM, a1, a2, a3, a4);
+		}
+		int changeDeviceForce(struct AudioStreamInANM *inANM) {
+			return _ZN7android16AudioStreamInANM17changeDeviceForceEv(inANM);
+		}
+		int changeDeviceRoutesAndInputSource(struct AudioStreamInANM *inANM, unsigned int a1, int a2, bool a3) {
+			return _ZN7android16AudioStreamInANM32changeDeviceRoutesAndInputSourceEjib(inANM, a1, a2, a3);
+		}
+		int setParameters(struct AudioStreamInANM *inANM, android::String8 const& a1) {
+			return _ZN7android16AudioStreamInANM13setParametersERKNS_7String8E(inANM, a1);
+		}
+		int changeDeviceState(struct AudioStreamInANM *inANM, int a1) {
+			return _ZN7android16AudioStreamInANM17changeDeviceStateEi(inANM, a1);
+		}
+	}
+}
+
 extern struct AudioHardwareANM *gANM;
+extern SortedVector<struct AudioStreamInANM*> *gInputs;
+extern SortedVector<struct AudioStreamOutANM*> *gOutputs;
 
 namespace android {
 	namespace AudioHardwareANM {
@@ -126,11 +306,13 @@ namespace android {
 		}
 
 		int initCheck(struct AudioHardwareANM *ANM) {
-			int outSz = ANM->mOutputs.size();
-			int inSz = ANM->mInputs.size();
+			int outSz = gOutputs->size();
+			int inSz = gInputs->size();
 			if (outSz > 0 || inSz > 0) {
 				ALOGI("%s: Already initialized! out=%d, in=%d", __func__, outSz, inSz);
-				return NO_ERROR;
+				//return NO_ERROR;
+			} else {
+				ALOGI("%s: out=%d, in=%d", __func__, outSz, inSz);
 			}
 
 			ALOGV("%s: OK", __func__);
@@ -228,8 +410,43 @@ namespace android {
 		void unlock(struct AudioHardwareANM *ANM) {
 			_ZN7android16AudioHardwareANM6unlockEv(gANM);
 		}
-		void setMicMute(struct AudioHardwareANM *ANM, bool a1) {
-			_ZN7android16AudioHardwareANM10setMicMuteEb(gANM, a1);
+		int setMicMute(struct AudioHardwareANM *ANM, bool state) {
+			char *sState; // r3@2
+			int upstreamVolume; // r7@4
+			int rc; // r7@6
+			unsigned int result; // r0@7
+
+			if ( state )
+				sState = "true";
+			else
+				sState = "false";
+			upstreamVolume = UNKNOWN_ERROR;
+			ALOGI("setMicMute(%s)", sState);
+			if (!state)
+				upstreamVolume = gANM->mUpstreamVolume;
+			ALOGI("adm_api: ste_adm_client_set_cscall_upstream_volume(%d)", upstreamVolume);
+			rc = ste_adm_client_set_cscall_upstream_volume(upstreamVolume);
+			android::AudioHardwareANM::handleError(gANM, rc, 6);
+			if ( rc )
+			{
+				ALOGE("setMicMute() - ste_adm_client_set_cscall_upstream_volume() failed");
+				return UNKNOWN_ERROR;
+			}
+			else
+			{
+				android::AudioHardwareANM::lock(gANM);
+				int idx = 0;
+				while ( idx < gInputs->size() )
+				{
+					struct AudioStreamInANM *inANM = gInputs->itemAt(idx);
+					android::AudioStreamInANM::setMute(inANM, state);
+					idx++;
+				}
+				gANM->mIsMicMuted = state;
+				android::AudioHardwareANM::unlock(gANM);
+				result = 0;
+			}
+			return result;
 		}
 		void setRxMute(struct AudioHardwareANM *ANM, bool a1) {
 			_ZN7android16AudioHardwareANM9setRxMuteEb(gANM, a1);
@@ -311,9 +528,9 @@ namespace android {
 				if ( mode == 4 ) {
 					if ( !gANM->unk10 )
 					{
-					  gANM->unk10 = 1;
-					  if ( gANM->csCallState & 2 )
-						android::AudioHardwareANM::forceReroute(gANM);
+						gANM->unk10 = 1;
+						if ( gANM->csCallState & 2 )
+							android::AudioHardwareANM::forceReroute(gANM);
 					}
 				}
 				return NO_ERROR;
@@ -498,8 +715,8 @@ namespace android {
 				*/
 			}
 			
-			//  android::String8::String8(&s1, &unk_12858);
-			//  android::String8::String8(&v75, &unk_12858);
+			//android::String8::String8(&s1, &unk_12858);
+			//android::String8::String8(&v75, &unk_12858);
 			
 			if (param.getInt(String8(android::AudioParameter::keyRouting), intVal) == NO_ERROR)
 			{
