@@ -55,9 +55,6 @@ struct AudioHardwareANM *gANM;
 SortedVector<struct AudioStreamInANM*> *gInputs;
 SortedVector<struct AudioStreamOutANM*> *gOutputs;
 
-void (*shim__ZN7android16AudioHardwareANM13muteAllSoundsEv)(struct AudioHardwareANM *mANM);
-void *(*shim__ZN7android16AudioHardwareANM15openInputStreamE15audio_devices_tP12audio_configPi)(struct AudioHardwareANM *mANM, audio_devices_t devices, audio_config* config, int* status);
-
 struct wrapper_audio_device {
     struct audio_hw_device device;
     struct wrapper::audio_hw_device *wrapped_device;
@@ -588,32 +585,7 @@ static int adev_open(const hw_module_t* module, const char* name,
 	gInputs = (SortedVector<struct AudioStreamInANM*> *)gANM->mInputs;
 	gOutputs = (SortedVector<struct AudioStreamOutANM*> *)gANM->mOutputs;
 
-     //android::AudioHardwareANM::muteAllSounds(gANM);
-    //_ZN7android16AudioHardwareANM13muteAllSoundsEv(gANM);
-    //android::AudioHardwareANM::muteAllSounds(gANM);
-	//android::AudioHardwareANM::setMicMute(gANM, true);
     ALOGE("%s: mIsMono: %d, mFormat: %d, mTtyMode: %d, mChannelMask: %d", __func__, gANM->mIsMono, gANM->mFormat, gANM->mTtyMode, gANM->mChannelMask);
-    //_ZN7android16AudioHardwareANM13muteAllSoundsEv
-#if 0
-    if (gHandle) {
-       shim__ZN7android16AudioHardwareANM13muteAllSoundsEv = (void(*)(struct AudioHardwareANM *gANM))dlsym(gHandle, "_ZN7android16AudioHardwareANM13muteAllSoundsEv");
-       shim__ZN7android16AudioHardwareANM15openInputStreamE15audio_devices_tP12audio_configPi =
-         (void* (*)(AudioHardwareANM*, unsigned int, audio_config*, int*))
-         dlsym(gHandle, "_ZN7android16AudioHardwareANM15openInputStreamE15audio_devices_tP12audio_configPi");
-       /*shim__ZN7android16AudioHardwareANM15openInputStreamE15audio_devices_tP12audio_configPi =
-                         (void* (*)(struct AudioHardwareANM*, audio_devices_t, audio_config*, status_t))
-                           dlsym(gHandle, "_ZN7android16AudioHardwareANM15openInputStreamE15audio_devices_tP12audio_configPi");*/
-    } else
-       ALOGE("%s: handle is not valid!", __func__);
-
-    if (shim__ZN7android16AudioHardwareANM13muteAllSoundsEv) {
-       shim__ZN7android16AudioHardwareANM13muteAllSoundsEv(gANM);
-    } else
-       ALOGE("%s: couldn't find _ZN7android16AudioHardwareANM13muteAllSoundsEv symbol!", __func__);
-
-    if (!shim__ZN7android16AudioHardwareANM15openInputStreamE15audio_devices_tP12audio_configPi)
-       ALOGE("%s: couldn't find shim__ZN7android16AudioHardwareANM15openInputStreamE15audio_devices_tP12audio_configPi symbol!", __func__);
-#endif
 
     adev->device.common.tag = HARDWARE_DEVICE_TAG;
     adev->device.common.version = AUDIO_DEVICE_API_VERSION_2_0;
