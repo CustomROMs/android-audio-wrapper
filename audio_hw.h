@@ -22,6 +22,8 @@
 
 //#include <utils/KeyedVector.h>
 
+#include <pthread.h>
+
 #ifdef __cplusplus
 //#if !defined(TEST)
 #include <hardware_legacy/AudioHardwareInterface.h>
@@ -142,7 +144,7 @@ struct __attribute__((aligned(4))) AudioStreamInANM
   bool unk94;
   int mChannels;
   int mSampleRate;
-  int mFormat;
+  audio_format_t mFormat;
   int mAdmNumBufs;
   int mAdmBufSize;
   int mAdmBufSharedMem;

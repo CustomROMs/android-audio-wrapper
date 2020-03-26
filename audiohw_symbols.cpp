@@ -88,13 +88,13 @@ namespace android {
 			return shim_ZNK7android16AudioStreamInANM18getInputFramesLostEv(inANM);
 		}
 		int setGain(struct AudioStreamInANM *inANM, float a1) {
-			return shim_ZN7android16AudioStreamInANM7setGainEf(inANM, a1);
+			return NO_ERROR;
 		}
 		int bufferSize(struct AudioStreamInANM *inANM) {
 			return shim_ZNK7android16AudioStreamInANM10bufferSizeEv(inANM);
 		}
 		int dump(struct AudioStreamInANM *inANM, int a1, Vector<String16> const& a2) {
-			return shim_ZN7android16AudioStreamInANM4dumpEiRKNS_6VectorINS_8String16EEE(inANM, a1, a2);
+			return NO_ERROR;
 		}
 		int doSetMute(struct AudioStreamInANM *inANM, bool a1) {
 			return shim_ZN7android16AudioStreamInANM9doSetMuteEb(inANM, a1);
@@ -127,7 +127,12 @@ namespace android {
 			return shim_ZN7android16AudioStreamInANM12closeDevicesEv(inANM);
 		}
 		int standby(struct AudioStreamInANM *inANM) {
-			return shim_ZN7android16AudioStreamInANM7standbyEv(inANM);
+			ALOGI("%s: [%d] standby() called", __func__, inANM->mInputIdx);
+			pthread_mutex_lock(&inANM->mMutex);
+			android::AudioStreamInANM::closeDevices(inANM);
+			pthread_mutex_unlock(&inANM->mMutex);
+			
+			return NO_ERROR;
 		}
 		int restore(struct AudioStreamInANM *inANM) {
 			return shim_ZN7android16AudioStreamInANM7restoreEv(inANM);
@@ -179,7 +184,7 @@ namespace android {
 			return -ENOSYS;
 		}
 
-		int getInputBufferSize(struct AudioHardwareANM *ANM, unsigned int sampleRate, int format, int channelsCount) {
+		int getInputBufferSize(struct AudioHardwareANM *ANM, unsigned int sampleRate, audio_format_t format, int channelsCount) {
 			size_t bufferSize = (40 * channelsCount * sampleRate) / 1000;
 			ALOGE("%s: channels count: %d, format: %d, sampleRate: %d, size=%d", __func__, channelsCount, format, sampleRate, bufferSize);
 

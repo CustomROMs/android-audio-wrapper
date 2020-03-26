@@ -289,22 +289,30 @@ static audio_channel_mask_t in_get_channels(const struct audio_stream *stream)
 
 static audio_format_t in_get_format(const struct audio_stream *stream)
 {
-    RETURN_WRAPPED_STREAM_IN_COMMON_CALL(stream, get_format);
+    ALOGE("%s: ", __func__);
+	struct AudioStreamInANM *inANM = toInANMc(stream);
+	
+	return inANM->mFormat;
 }
 
 static int in_set_format(struct audio_stream *stream, audio_format_t format)
 {
-    RETURN_WRAPPED_STREAM_IN_COMMON_CALL(stream, set_format, format);
+    ALOGE("%s: implement me!", __func__);
+	
+	return 0;
 }
 
 static int in_standby(struct audio_stream *stream)
 {
-    RETURN_WRAPPED_STREAM_IN_COMMON_CALL(stream, standby);
+    ALOGE("%s: ", __func__);
+	struct AudioStreamInANM *inANM = toInANMc(stream);
+	
+    return android::AudioStreamInANM::standby(inANM);
 }
 
 static int in_dump(const struct audio_stream *stream, int fd)
 {
-    RETURN_WRAPPED_STREAM_IN_COMMON_CALL(stream, dump, fd);
+    return 0;
 }
 
 static int in_set_parameters(struct audio_stream *stream, const char *kvpairs)
@@ -329,7 +337,9 @@ static char * in_get_parameters(const struct audio_stream *stream,
 
 static int in_set_gain(struct audio_stream_in *stream, float gain)
 {
-    RETURN_WRAPPED_STREAM_IN_CALL(stream, set_gain, gain);
+    ALOGE("%s: not impemented");
+	
+	return 0;
 }
 
 static ssize_t in_read(struct audio_stream_in *stream, void* buffer,
