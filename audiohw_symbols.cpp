@@ -38,7 +38,7 @@ namespace android {
 }
 
 namespace android {
-	namespace AudioStreamInANM1 {
+	namespace AudioStreamInANM {
 		int isFake(struct AudioStreamInANM *inANM) {
 			return shim_ZN7android16AudioStreamInANM6isFakeEv(inANM);
 		}
@@ -170,7 +170,7 @@ extern SortedVector<struct AudioStreamInANM*> *gInputs;
 extern SortedVector<struct AudioStreamOutANM*> *gOutputs;
 
 namespace android {
-	namespace AudioHardwareANM1 {
+	namespace AudioHardwareANM {
 		int getMicMute(struct AudioHardwareANM *ANM, bool *state) {
 			*state = gANM->mIsMicMuted;
 			return 0;
@@ -178,10 +178,13 @@ namespace android {
 		int setMasterVolume(struct AudioHardwareANM *ANM, float volume) {
 			return -ENOSYS;
 		}
-		
-		// already implemented in adev_get_input_buffer_size
-		void getInputBufferSize(struct AudioHardwareANM *ANM, unsigned int a1, int a2, int a3) {
-			shim_ZN7android16AudioHardwareANM18getInputBufferSizeEjii(gANM, a1, a2, a3);
+
+		int getInputBufferSize(struct AudioHardwareANM *ANM, unsigned int sampleRate, int format, int channelMask) {
+			int channelsCount = popcount(channelMask);
+			size_t bufferSize = (40 * channelsCount * sampleRate) / 1000;
+			ALOGE("%s: channels count: %d, format: %d, sampleRate: %d, size=%d", __func__, channelsCount, format, sampleRate, bufferSize);
+
+			return bufferSize;
 		}
 
 		int initCheck(struct AudioHardwareANM *ANM) {
@@ -211,7 +214,7 @@ namespace android {
 
 			if (rc) {
 				ALOGE("%s: ste_adm_client_set_cscall_downstream_volume failed", __func__);
-				//android::AudioHardwareANM1::handleError(ANM, rc, 5);
+				//android::AudioHardwareANM::handleError(ANM, rc, 5);
 				return UNKNOWN_ERROR;
 			}
 
@@ -305,7 +308,7 @@ namespace android {
 				upstreamVolume = gANM->mUpstreamVolume;
 			ALOGI("adm_api: ste_adm_client_set_cscall_upstream_volume(%d)", upstreamVolume);
 			rc = ste_adm_client_set_cscall_upstream_volume(upstreamVolume);
-			android::AudioHardwareANM1::handleError(gANM, rc, 6);
+			android::AudioHardwareANM::handleError(gANM, rc, 6);
 			if ( rc )
 			{
 				ALOGE("setMicMute() - ste_adm_client_set_cscall_upstream_volume() failed");
@@ -313,7 +316,7 @@ namespace android {
 			}
 			else
 			{
-				android::AudioHardwareANM1::lock(gANM);
+				android::AudioHardwareANM::lock(gANM);
 				int idx = 0;
 				ALOGE("%s: gInputs->size() = %d", __func__, gInputs->size());
 				/*while ( idx < gInputs->size() )
@@ -323,7 +326,7 @@ namespace android {
 					idx++;
 				}*/
 				gANM->mIsMicMuted = state;
-				android::AudioHardwareANM1::unlock(gANM);
+				android::AudioHardwareANM::unlock(gANM);
 				result = 0;
 			}
 			return result;
@@ -353,7 +356,7 @@ namespace android {
 			if (gANM->csCallState & 1)
 			{
 				ALOGI("%s: Stop CSCall, (%p)", __func__, gANM->csCallState);
-				android::AudioHardwareANM1::updateState(gANM, gANM->csCallState & 0xFFFFFFFE);
+				android::AudioHardwareANM::updateState(gANM, gANM->csCallState & 0xFFFFFFFE);
 			}
 		}
 
@@ -361,8 +364,8 @@ namespace android {
 			if ( !(gANM->csCallState & 1) )
 			{
 				ALOGI("%s: Start CSCall, %p", __func__, gANM->csCallState);
-				android::AudioHardwareANM1::setRingbackMute(gANM, false);
-				android::AudioHardwareANM1::updateState(gANM, gANM->csCallState | 1);
+				android::AudioHardwareANM::setRingbackMute(gANM, false);
+				android::AudioHardwareANM::updateState(gANM, gANM->csCallState | 1);
 			}
 		}
 		void unmuteAllSounds(struct AudioHardwareANM *ANM) {
@@ -404,13 +407,13 @@ namespace android {
 			android::AudioHardwareBase1::setMode(gANM, mode);
 			if ( mode != 2 )
 			{
-				android::AudioHardwareANM1::stopCSCall(gANM);
+				android::AudioHardwareANM::stopCSCall(gANM);
 				if ( mode == 4 ) {
 					if ( !gANM->unk10 )
 					{
 						gANM->unk10 = 1;
 						if ( gANM->csCallState & 2 )
-							android::AudioHardwareANM1::forceReroute(gANM);
+							android::AudioHardwareANM::forceReroute(gANM);
 					}
 				}
 				return NO_ERROR;
@@ -419,20 +422,20 @@ namespace android {
 			if (gANM->unk10) {
 				gANM->unk10 = 0;
 				if (gANM->csCallState & 2)
-					android::AudioHardwareANM1::forceReroute(gANM);
+					android::AudioHardwareANM::forceReroute(gANM);
 			}
 			
 			if (mode != 4) {
 				if ( mode == 2 ) {
-					android::AudioHardwareANM1::startCSCall(gANM);
+					android::AudioHardwareANM::startCSCall(gANM);
 				} else if (!mode) {
-					android::AudioHardwareANM1::notifyOutputAboutNormalMode(gANM);
+					android::AudioHardwareANM::notifyOutputAboutNormalMode(gANM);
 				}
 			} else {
 				if (!gANM->unk10 ) {
 					gANM->unk10 = 1;
 					if ( gANM->csCallState & 2 )
-						android::AudioHardwareANM1::forceReroute(gANM);
+						android::AudioHardwareANM::forceReroute(gANM);
 				}
 			}
 
@@ -486,27 +489,27 @@ namespace android {
 			if (param.get(String8("bt_headset_nrec"), value) == NO_ERROR)
 			{
 				bool btMatchFlag = (value == "on");
-				android::AudioHardwareANM1::lock(gANM);
+				android::AudioHardwareANM::lock(gANM);
 				if (btMatchFlag != gANM->mBtHeadsetEnabled)
 				{
 					gANM->mBtHeadsetEnabled = btMatchFlag;
-					if ( android::AudioHardwareANM1::getOutputState(gANM) << 30 )
-						android::AudioHardwareANM1::forceReroute(gANM);
+					if ( android::AudioHardwareANM::getOutputState(gANM) << 30 )
+						android::AudioHardwareANM::forceReroute(gANM);
 				}
-				android::AudioHardwareANM1::unlock(gANM);
+				android::AudioHardwareANM::unlock(gANM);
 			}
 			
 			if (param.get(String8("extraVolume"), value) == NO_ERROR)
 			{
 				bool extraVolumeFlag = (value == "true");
-				android::AudioHardwareANM1::lock(gANM);
+				android::AudioHardwareANM::lock(gANM);
 				if (extraVolumeFlag != gANM->mExtraVolumeEnabled)
 				{
 					gANM->mExtraVolumeEnabled = extraVolumeFlag;
-					if (android::AudioHardwareANM1::getOutputState(gANM) & 1)
-						android::AudioHardwareANM1::forceReroute(gANM);
+					if (android::AudioHardwareANM::getOutputState(gANM) & 1)
+						android::AudioHardwareANM::forceReroute(gANM);
 				}
-				android::AudioHardwareANM1::unlock(gANM);
+				android::AudioHardwareANM::unlock(gANM);
 			}
 			
 			ste_adm_tty_mode_t ttyMode = STE_ADM_TTY_MODE_INVALID;
@@ -530,7 +533,7 @@ namespace android {
 			if (ttyMode == STE_ADM_TTY_MODE_VCO) {
 					ALOGI("%s: ste_adm_client_set_cscall_tty_mode(%d)", __func__, gANM->mTtyMode);
 					int setTtyModeRet = ste_adm_client_set_cscall_tty_mode(gANM->mTtyMode);
-					android::AudioHardwareANM1::handleError(gANM, setTtyModeRet, 11);
+					android::AudioHardwareANM::handleError(gANM, setTtyModeRet, 11);
 					if (setTtyModeRet)
 						ALOGE("%s: ste_adm_client_set_cscall_tty_mode failed: %d", __func__, setTtyModeRet);
 			}
@@ -539,18 +542,18 @@ namespace android {
 				if (param.get(String8("voip"), value) == NO_ERROR)
 				{
 					if (value == "on")
-						android::AudioHardwareANM1::startVoIP(gANM);
+						android::AudioHardwareANM::startVoIP(gANM);
 					else
-						android::AudioHardwareANM1::stopVoIP(gANM);
+						android::AudioHardwareANM::stopVoIP(gANM);
 				}
 			}
 			
 			if (param.get(String8("fm_radio_volume"), value) == NO_ERROR)
 			{
 				if (value == "on")
-					android::AudioHardwareANM1::startFmRadio(gANM);
+					android::AudioHardwareANM::startFmRadio(gANM);
 				else
-					android::AudioHardwareANM1::stopFmRadio(gANM);
+					android::AudioHardwareANM::stopFmRadio(gANM);
 			}
 			
 			int intVal;
@@ -558,17 +561,17 @@ namespace android {
 			if (param.getInt(String8("fm_radio_mute"), intVal) == NO_ERROR)
 			{
 				if (intVal)
-					android::AudioHardwareANM1::muteFmRadio(gANM);
+					android::AudioHardwareANM::muteFmRadio(gANM);
 				else
-					android::AudioHardwareANM1::unmuteFmRadio(gANM);
+					android::AudioHardwareANM::unmuteFmRadio(gANM);
 			}
 			
 			if (param.getInt(String8("all_sound_mute"), intVal) == NO_ERROR)
 			{
 				if (intVal)
-					android::AudioHardwareANM1::muteAllSounds(gANM);
+					android::AudioHardwareANM::muteAllSounds(gANM);
 				else
-					android::AudioHardwareANM1::unmuteAllSounds(gANM);
+					android::AudioHardwareANM::unmuteAllSounds(gANM);
 			}
 			
 			if (param.getInt(String8("toMono"), intVal) == NO_ERROR)
@@ -604,7 +607,7 @@ namespace android {
 				gANM->devices2 = intVal & 0x97FC0000;
 				if (gANM->devices1)
 				{
-				  /*android::AudioHardwareANM1::makeParam(&v77, ANM, v36, v38);
+				  /*android::AudioHardwareANM::makeParam(&v77, ANM, v36, v38);
 				  android::String8::append(&s1, &v77);
 				  android::String8::~String8(&v77);*/
 				}
@@ -612,7 +615,7 @@ namespace android {
 				if (gANM->devices2)
 				{
 				  /*
-				  android::AudioHardwareANM1::makeParam(&v78, ANM, v36, v40);
+				  android::AudioHardwareANM::makeParam(&v78, ANM, v36, v40);
 				  android::String8::append(&v75, &v78);
 				  android::String8::~String8(&v78);
 				  */

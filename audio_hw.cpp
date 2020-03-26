@@ -51,7 +51,6 @@ using android::SortedVector;
 extern "C" void *gHandle;
 
 struct AudioHardwareANM *gANM;
-struct AudioStreamInANM *gInANM;
 
 SortedVector<struct AudioStreamInANM*> *gInputs;
 SortedVector<struct AudioStreamOutANM*> *gOutputs;
@@ -147,6 +146,21 @@ enum {
     ALOGV("%s", __FUNCTION__); \
     return WRAPPED_STREAM_OUT_COMMON(s).func(&WRAPPED_STREAM_OUT_COMMON(s), ##__VA_ARGS__); \
 })
+
+static inline struct AudioStreamInANM* toInANM(struct audio_stream *in) {
+	struct legacy_stream_in *lin;
+	lin = (struct legacy_stream_in *)WRAPPED_STREAM_IN(in);
+	struct AudioStreamInANM *inANM = (struct AudioStreamInANM*)lin->legacy_in;
+	return inANM;
+}
+
+static inline struct AudioStreamInANM* toInANMc(const struct audio_stream *in) {
+	struct legacy_stream_in *lin;
+	lin = (struct legacy_stream_in *)WRAPPED_STREAM_IN(in);
+	struct AudioStreamInANM *inANM = (struct AudioStreamInANM*)lin->legacy_in;
+	return inANM;
+}
+
 
 static uint32_t out_get_sample_rate(const struct audio_stream *stream)
 {
@@ -248,17 +262,16 @@ static int out_remove_audio_effect(const struct audio_stream *stream, effect_han
 static uint32_t in_get_sample_rate(const struct audio_stream *stream)
 {
     ALOGE("%s: ", __func__);
-    if (gInANM) {
-		ALOGI("%s: mSampleRate=%d", __func__, gInANM->mSampleRate);
-		return gInANM->mSampleRate;
-	}
-
-    return DEFAULT_IN_SAMPLE_RATE;
+    struct AudioStreamInANM *inANM = toInANMc(stream);
+	
+	return inANM->mSampleRate;
 }
 
 static int in_set_sample_rate(struct audio_stream *stream, uint32_t rate)
 {
-    RETURN_WRAPPED_STREAM_IN_COMMON_CALL(stream, set_sample_rate, rate);
+    ALOGE("%s: implement me!", __func__);
+	
+	return 0;
 }
 
 static size_t in_get_buffer_size(const struct audio_stream *stream)
@@ -407,7 +420,7 @@ static int adev_set_parameters(struct audio_hw_device *dev, const char *kvpairs)
 	android::String8 s(kvpairs);
 	ALOGI("%s: kvpairs = %s", __FUNCTION__, kvpairs);
 	
-	return android::AudioHardwareANM1::setParameters(adev->mANM, s);
+	return android::AudioHardwareANM::setParameters(adev->mANM, s);
 }
 
 static char * adev_get_parameters(const struct audio_hw_device *dev,
@@ -415,7 +428,7 @@ static char * adev_get_parameters(const struct audio_hw_device *dev,
 {
     String8 s8;
 
-    s8 = android::AudioHardwareANM1::getParameters(gANM, String8(keys));
+    s8 = android::AudioHardwareANM::getParameters(gANM, String8(keys));
     return strdup(s8.string());
 }
 
@@ -427,14 +440,14 @@ static uint32_t adev_get_supported_devices(const struct audio_hw_device *dev)
 static int adev_init_check(const struct audio_hw_device *dev)
 {
    struct audio_hw_device_sec *adev = (struct audio_hw_device_sec *)dev;
-   return android::AudioHardwareANM1::initCheck(adev->mANM);
+   return android::AudioHardwareANM::initCheck(adev->mANM);
 }
 
 static int adev_set_voice_volume(struct audio_hw_device *dev, float volume)
 {
 	struct audio_hw_device_sec *adev = (struct audio_hw_device_sec *)dev;
 	ALOGE("%s: volume=%f", __func__, volume);
-    return android::AudioHardwareANM1::setVoiceVolume(adev->mANM, volume);
+    return android::AudioHardwareANM::setVoiceVolume(adev->mANM, volume);
 }
 
 static int adev_get_master_volume(struct audio_hw_device *dev, float *volume)
@@ -449,7 +462,7 @@ static int adev_set_master_volume(struct audio_hw_device *dev, float volume)
 
 static int adev_set_mode(struct audio_hw_device *dev, audio_mode_t mode)
 {
-    return android::AudioHardwareANM1::setMode(gANM, mode);
+    return android::AudioHardwareANM::setMode(gANM, mode);
 }
 
 static int adev_set_mic_mute(struct audio_hw_device *dev, bool state)
@@ -466,13 +479,9 @@ static int adev_get_mic_mute(const struct audio_hw_device *dev, bool *state)
 static size_t adev_get_input_buffer_size(const struct audio_hw_device *dev,
                                     const struct audio_config *config)
 {
-    //size_t res = WRAPPED_DEVICE(dev)->get_input_buffer_size(WRAPPED_DEVICE(dev), config);
-    int channels_count = popcount(config->channel_mask);
-    size_t buffer_size = (40 * channels_count * config->sample_rate) / 1000;
-    ALOGE("%s: channels count: %d, format: %d, sampleRate: %d, size=%d", __FUNCTION__, channels_count, config->format, config->sample_rate, buffer_size);
-
-    return buffer_size;
+	return android::AudioHardwareANM::getInputBufferSize(gANM, config->sample_rate, config->format, config->channel_mask);
 }
+
 
 static int adev_open_input_stream(struct audio_hw_device *dev,
                              audio_io_handle_t handle,
@@ -499,11 +508,8 @@ static int adev_open_input_stream(struct audio_hw_device *dev,
                               &WRAPPED_STREAM_IN(in), flags, address, source);
 
     ALOGE("%s: wrapped_stream = %p", __func__, WRAPPED_STREAM_IN(in));
-	
-	struct legacy_stream_in *lin;
-	lin = (struct legacy_stream_in *)WRAPPED_STREAM_IN(in);
-	struct AudioStreamInANM *inANM = (struct AudioStreamInANM*)lin->legacy_in;
-	gInANM = inANM;
+
+	struct AudioStreamInANM *inANM = toInANM((struct audio_stream*)in);
 	ALOGE("%s: sampleRate = %d, format = %d, channel_mask=%p, conn id=%d, mAdmNumBufs=%d, mAdmBufSize=%d, mAdmBufSharedMem=%d", __func__, inANM->mSampleRate, inANM->mFormat, inANM->mChannels, inANM->mADMConnectionID, inANM->mAdmNumBufs, inANM->mAdmBufSize, inANM->mAdmBufSharedMem);
     if(ret < 0)
         goto err_open;
@@ -536,6 +542,10 @@ err_open:
 static void adev_close_input_stream(struct audio_hw_device *dev,
                                    struct audio_stream_in *in)
 {
+	struct AudioStreamInANM *inANM = toInANM((struct audio_stream*)in);
+	
+	ALOGE("%s: sampleRate = %d, format = %d, channel_mask=%p, conn id=%d, mAdmNumBufs=%d, mAdmBufSize=%d, mAdmBufSharedMem=%d", __func__, inANM->mSampleRate, inANM->mFormat, inANM->mChannels, inANM->mADMConnectionID, inANM->mAdmNumBufs, inANM->mAdmBufSize, inANM->mAdmBufSharedMem);
+	
     WRAPPED_DEVICE_CALL(dev, close_input_stream, WRAPPED_STREAM_IN(in));
     free(in);
 }
