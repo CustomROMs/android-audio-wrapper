@@ -453,7 +453,7 @@ static int adev_set_mode(struct audio_hw_device *dev, audio_mode_t mode)
 
 static int adev_set_mic_mute(struct audio_hw_device *dev, bool state)
 {
-    RETURN_WRAPPED_DEVICE_CALL(dev, set_mic_mute, state);
+    return android::AudioHardwareANM1::setMicMute(gANM, state);
 }
 
 static int adev_get_mic_mute(const struct audio_hw_device *dev, bool *state)
@@ -483,7 +483,7 @@ static int adev_open_input_stream(struct audio_hw_device *dev,
                                   audio_source_t source __unused)
 {
     struct wrapper_stream_in *in;
-    struct legacy_stream_in *lin;
+
     int status;
     int ret;
 
@@ -498,6 +498,11 @@ static int adev_open_input_stream(struct audio_hw_device *dev,
                               &WRAPPED_STREAM_IN(in), flags, address, source);
 
     ALOGE("%s: wrapped_stream = %p", __func__, WRAPPED_STREAM_IN(in));
+	
+	struct legacy_stream_in *lin;
+	lin = (struct legacy_stream_in *)WRAPPED_STREAM_IN(in);
+	struct AudioStreamInANM *inANM = (struct AudioStreamInANM*)lin->legacy_in;
+	ALOGE("%s: sampleRate = %d, format = %d, channel_mask=%p, conn id=%d, mAdmNumBufs=%d, mAdmBufSize=%d, mAdmBufSharedMem=%d", __func__, inANM->mSampleRate, inANM->mFormat, inANM->mChannels, inANM->mADMConnectionID, inANM->mAdmNumBufs, inANM->mAdmBufSize, inANM->mAdmBufSharedMem);
     if(ret < 0)
         goto err_open;
 

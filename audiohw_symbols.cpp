@@ -315,12 +315,13 @@ namespace android {
 			{
 				android::AudioHardwareANM1::lock(gANM);
 				int idx = 0;
-				while ( idx < gInputs->size() )
+				ALOGE("%s: gInputs->size() = %d", __func__, gInputs->size());
+				/*while ( idx < gInputs->size() )
 				{
 					struct AudioStreamInANM *inANM = gInputs->itemAt(idx);
 					android::AudioStreamInANM1::setMute(inANM, state);
 					idx++;
-				}
+				}*/
 				gANM->mIsMicMuted = state;
 				android::AudioHardwareANM1::unlock(gANM);
 				result = 0;
