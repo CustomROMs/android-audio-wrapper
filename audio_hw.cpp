@@ -345,7 +345,10 @@ static int in_set_gain(struct audio_stream_in *stream, float gain)
 static ssize_t in_read(struct audio_stream_in *stream, void* buffer,
                        size_t bytes)
 {
-    RETURN_WRAPPED_STREAM_IN_CALL(stream, read, buffer, bytes);
+    ALOGE("%s: ", __func__);
+	struct AudioStreamInANM *inANM = toInANM((struct audio_stream*)stream);
+
+    return android::AudioStreamInANM::read(inANM, buffer, bytes);
 }
 
 static uint32_t in_get_input_frames_lost(struct audio_stream_in *stream)

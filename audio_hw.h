@@ -147,7 +147,7 @@ struct __attribute__((aligned(4))) AudioStreamInANM
   audio_format_t mFormat;
   int mAdmNumBufs;
   int mAdmBufSize;
-  int mAdmBufSharedMem;
+  void *mAdmBufSharedMem;
   pthread_mutex_t mMutex;
   char unk_xx2[8];
   int mDevicesList;

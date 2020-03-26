@@ -38,6 +38,12 @@ namespace android {
 }
 
 namespace android {
+	namespace AudioHardwareANM {
+		void handleError(struct AudioHardwareANM *ANM, int a1, android::adm_api_type_t a2);
+	}
+}
+
+namespace android {
 	namespace AudioStreamInANM {
 		int isFake(struct AudioStreamInANM *inANM) {
 			return shim_ZN7android16AudioStreamInANM6isFakeEv(inANM);
@@ -137,12 +143,185 @@ namespace android {
 		int restore(struct AudioStreamInANM *inANM) {
 			return shim_ZN7android16AudioStreamInANM7restoreEv(inANM);
 		}
-		int doRead(struct AudioStreamInANM *inANM, void* a1, long a2) {
-			return shim_ZN7android16AudioStreamInANM6doReadEPvl(inANM, a1, a2);
+		
+		unsigned int doRead(struct AudioStreamInANM *inANM, void *buffer, size_t chunkSize)
+		{
+		  signed int retryAttempts; // r7@1
+		  int rc; // r0@2 MAPDST
+		  int inputSource; // r3@7
+		  int v9; // r1@7
+		  int unk26; // r10@14
+		  int format; // r9@15
+		  signed int formatDivider; // r1@16
+		  int admBufSize; // ST18_4@18
+		  int channels; // r11@18
+		  int v15; // ST1C_4@18
+		  signed int channelsCount; // r0@18
+		  int sampleRate; // ST20_4@18
+		  unsigned int v18; // r0@18
+		  int inputSource1; // r2@18
+		  int v20; // r1@18
+		  void *dest; // [sp+24h] [bp-3Ch]@1
+		  int buf_idx; // [sp+34h] [bp-2Ch]@2
+
+		  retryAttempts = 3;
+		  dest = buffer;
+		  while ( 1 )
+		  {
+			while ( 1 )
+			{
+			  inANM->mReadInProgress = 1;
+			  buf_idx = 0;
+			  rc = ste_adm_client_receive(inANM->mADMConnectionID, &buf_idx);
+			  inANM->mReadInProgress = 0;
+			  android::AudioHardwareANM::handleError(inANM->mANM, rc, 2);
+			  if ( rc != -9 )
+				break;
+			  --retryAttempts;
+			  if ( android::AudioStreamInANM::restore(inANM) )
+				return 0x80000002;
+			  ALOGE("%s: Reconnected to ADM server", __func__);
+			  if ( !retryAttempts )
+				return chunkSize;
+			}
+			if ( rc )
+			  break;
+			memcpy(dest, (inANM->mAdmBufSharedMem + buf_idx * inANM->mAdmBufSize), chunkSize);
+			if ( inANM->unk26 < 0 )
+			{
+			  inANM->unk26 = 250;
+			  inputSource = inANM->mInputSource;
+			  v9 = inputSource - 6 + ((inputSource - 6) <= 0) - (inputSource - 6); // ???
+			  if ( inputSource == 10 )
+				v9 |= 1u;
+			  if ( (v9 || inputSource == 1) && inANM->mDevicesList == 0x100000 && !inANM->mState )
+				inANM->unk26 = 0;
+			}
+			unk26 = inANM->unk26;
+			if ( unk26 > 249 )
+			  return chunkSize;
+			format = inANM->mFormat;
+			if ( format == 1 )
+			  formatDivider = 2;
+			else
+			  formatDivider = 1;
+			admBufSize = inANM->mAdmBufSize;
+			channels = inANM->mChannels;
+			v15 = inANM->mAdmBufSize / formatDivider;
+			channelsCount = popcount(inANM->mChannels);
+			sampleRate = inANM->mSampleRate;
+			v18 = 1000 * (v15 / channelsCount) / sampleRate;
+			inANM->unk26 = unk26 + v18;
+			ALOGI(
+			  "%s: micbias: %d %d (f:%d ch:0x%x bs:%d sr:%d)",
+			  __func__,
+			  v18,
+			  unk26 + v18,
+			  format,
+			  channels,
+			  admBufSize,
+			  sampleRate);
+			inputSource1 = inANM->mInputSource;
+			v20 = inputSource1 - 6 + ((inputSource1 - 6) <= 0) - (inputSource1 - 6); // ???
+			if ( inputSource1 == 10 )
+			  v20 |= 1u;
+			if ( !v20 )
+			{
+			  memset(dest, 0, chunkSize);
+			  return chunkSize;
+			}
+		  }
+		  ALOGE("%s: Failed to receive audio data from ADM: %d", __func__, rc);
+		  return 0x80000002;
 		}
-		int read(struct AudioStreamInANM *inANM, void* a1, long a2) {
-			return shim_ZN7android16AudioStreamInANM4readEPvl(inANM, a1, a2);
+
+		size_t read(struct AudioStreamInANM *inANM, void *buffer, size_t bytes) {
+		  size_t chunkSize; // r9@9
+		  size_t readBytesCount; // r0@11 MAPDST
+		  size_t i; // r6@17
+		  int inputSource; // r0@21
+		  int v12; // r3@22
+		  unsigned int channelsCount; // r0@25
+
+		  pthread_mutex_lock(&inANM->mMutex);
+		  if (android::AudioStreamInANM::openDevices(inANM))
+		  {
+			bytes = 0;
+			ALOGE("%s: read: openDevices failed", __func__);
+		  }
+		  else if ( inANM->mDeviceListSize )
+		  {
+			if ( bytes )
+			{
+			  if ( inANM->mAdmBufSharedMem )
+			  {
+				for ( i = 0; i < bytes; i += readBytesCount )
+				{
+				  chunkSize = bytes - i;
+				  if ( bytes - i >= inANM->mAdmBufSize )
+					chunkSize = inANM->mAdmBufSize;
+				  readBytesCount = android::AudioStreamInANM::doRead(inANM, buffer + i, chunkSize);
+				  if ( readBytesCount <= 0 )
+				  {
+					bytes = readBytesCount;
+					ALOGE("%s: read failed: %ld", __func__, readBytesCount);
+					goto out;
+				  }
+				  if ( readBytesCount > chunkSize )
+				  {
+					bytes = 0x80000000;
+					ALOGE("%s: read too much: %ld", __func__, readBytesCount);
+					goto out;
+				  }
+				  if ( readBytesCount != chunkSize )
+					ALOGE(
+					  "%s: read wrong amount of bytes %ld != %ld",
+					  __func__,
+					  readBytesCount,
+					  chunkSize);
+				}
+				if ( !inANM->mState )
+				{
+				  inputSource = inANM->mInputSource;
+				  if ( inputSource <= 1 )
+					v12 = (inputSource - 5 + ((inputSource - 5) <= 0) - (inputSource - 5)) | 1;
+				  else
+					v12 = inputSource - 5 + ((inputSource - 5) <= 0) - (inputSource - 5);
+				  if ( v12 )
+				  {
+					channelsCount = popcount(inANM->mChannels);
+					/*android::HalAudioProcessing::processInput(
+					  &inANM->mANM->unk_idx1,
+					  inANM->mSampleRate,
+					  channelsCount,
+					  buffer,
+					  i);*/
+				  }
+				}
+				bytes = i;
+			  }
+			  else
+			  {
+				bytes = -38;
+				ALOGE("%s: read - input buffer not yet allocated", __func__);
+			  }
+			}
+			else
+			{
+			  ALOGE("%s: Requested to read invalid amount of bytes! bytes=0 mAdmBufSize=%d", __func__, inANM->mAdmBufSize);
+			  bytes = -22;
+			}
+		  }
+		  else
+		  {
+			ALOGE("%s: [%d] Empty device list, nothing to read", __func__, inANM->mInputIdx);
+			memset(buffer, 0, bytes);
+		  }
+		out:
+		  pthread_mutex_unlock(&inANM->mMutex);
+		  return bytes;
 		}
+
 		int refreshDeviceList(struct AudioStreamInANM *inANM, DeviceList* a1, int a2, unsigned int a3, int a4, struct AudioHardwareANM* a5) {
 			return shim_ZN7android16AudioStreamInANM17refreshDeviceListEPNS_10DeviceListEijiPNS_16AudioHardwareANME(inANM, a1, a2, a3, a4, a5);
 		}
