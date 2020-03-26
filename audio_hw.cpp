@@ -51,6 +51,7 @@ using android::SortedVector;
 extern "C" void *gHandle;
 
 struct AudioHardwareANM *gANM;
+struct AudioStreamInANM *gInANM;
 
 SortedVector<struct AudioStreamInANM*> *gInputs;
 SortedVector<struct AudioStreamOutANM*> *gOutputs;
@@ -247,10 +248,10 @@ static int out_remove_audio_effect(const struct audio_stream *stream, effect_han
 static uint32_t in_get_sample_rate(const struct audio_stream *stream)
 {
     ALOGE("%s: ", __func__);
-    const struct legacy_stream_in *in =
-        reinterpret_cast<const struct legacy_stream_in *>(stream);
-
-    //return in->legacy_in->mSampleRate;
+    if (gInANM) {
+		ALOGI("%s: mSampleRate=%d", __func__, gInANM->mSampleRate);
+		return gInANM->mSampleRate;
+	}
 
     return DEFAULT_IN_SAMPLE_RATE;
 }
@@ -453,7 +454,7 @@ static int adev_set_mode(struct audio_hw_device *dev, audio_mode_t mode)
 
 static int adev_set_mic_mute(struct audio_hw_device *dev, bool state)
 {
-    return android::AudioHardwareANM1::setMicMute(gANM, state);
+    RETURN_WRAPPED_DEVICE_CALL(dev, set_mic_mute, state);
 }
 
 static int adev_get_mic_mute(const struct audio_hw_device *dev, bool *state)
@@ -502,6 +503,7 @@ static int adev_open_input_stream(struct audio_hw_device *dev,
 	struct legacy_stream_in *lin;
 	lin = (struct legacy_stream_in *)WRAPPED_STREAM_IN(in);
 	struct AudioStreamInANM *inANM = (struct AudioStreamInANM*)lin->legacy_in;
+	gInANM = inANM;
 	ALOGE("%s: sampleRate = %d, format = %d, channel_mask=%p, conn id=%d, mAdmNumBufs=%d, mAdmBufSize=%d, mAdmBufSharedMem=%d", __func__, inANM->mSampleRate, inANM->mFormat, inANM->mChannels, inANM->mADMConnectionID, inANM->mAdmNumBufs, inANM->mAdmBufSize, inANM->mAdmBufSharedMem);
     if(ret < 0)
         goto err_open;
