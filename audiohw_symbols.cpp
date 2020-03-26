@@ -91,7 +91,7 @@ namespace android {
 			return shim_ZNK7android16AudioStreamInANM6formatEv(inANM);
 		}
 		int getInputFramesLost(struct AudioStreamInANM *inANM) {
-			return shim_ZNK7android16AudioStreamInANM18getInputFramesLostEv(inANM);
+			return 0;
 		}
 		int setGain(struct AudioStreamInANM *inANM, float a1) {
 			return NO_ERROR;

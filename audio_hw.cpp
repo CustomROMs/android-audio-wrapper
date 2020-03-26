@@ -45,6 +45,8 @@
 using android::KeyedVector;
 using android::SortedVector;
 
+using android::NO_ERROR;
+
 //#include <hardware_legacy/AudioHardwareInterface.h>
 //#include <hardware_legacy/AudioSystemLegacy.h>
 
@@ -337,9 +339,9 @@ static char * in_get_parameters(const struct audio_stream *stream,
 
 static int in_set_gain(struct audio_stream_in *stream, float gain)
 {
-    ALOGE("%s: not impemented");
+	ALOGE("%s: not impemented", __func__);
 	
-	return 0;
+	return NO_ERROR;
 }
 
 static ssize_t in_read(struct audio_stream_in *stream, void* buffer,
@@ -353,17 +355,24 @@ static ssize_t in_read(struct audio_stream_in *stream, void* buffer,
 
 static uint32_t in_get_input_frames_lost(struct audio_stream_in *stream)
 {
-    RETURN_WRAPPED_STREAM_IN_CALL(stream, get_input_frames_lost);
+    ALOGV("%s: ", __func__);
+	struct AudioStreamInANM *inANM = toInANM((struct audio_stream*)stream);
+
+    return android::AudioStreamInANM::getInputFramesLost(inANM);
 }
 
 static int in_add_audio_effect(const struct audio_stream *stream, effect_handle_t effect)
 {
-    RETURN_WRAPPED_STREAM_IN_COMMON_CALL(stream, add_audio_effect, effect);
+	ALOGE("%s: not impemented", __func__);
+	
+	return NO_ERROR;
 }
 
 static int in_remove_audio_effect(const struct audio_stream *stream, effect_handle_t effect)
 {
-    RETURN_WRAPPED_STREAM_IN_COMMON_CALL(stream, remove_audio_effect, effect);
+	ALOGE("%s: not impemented", __func__);
+	
+	return NO_ERROR;
 }
 
 static int adev_open_output_stream(struct audio_hw_device *dev,
