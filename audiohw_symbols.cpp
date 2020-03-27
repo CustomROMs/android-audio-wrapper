@@ -387,6 +387,8 @@ namespace android {
 			shim_ZN7android16AudioHardwareANM11handleErrorEiNS_14adm_api_type_tE(gANM, a1, a2);
 		}
 		int setVoiceVolume(struct AudioHardwareANM *ANM, float volume) {
+			volume *= 8;
+
 			if (volume < 0.0) {
 				ALOGE("%s: setVoiceVolume(%f): Bad value", __func__, volume);
 				return BAD_VALUE;
