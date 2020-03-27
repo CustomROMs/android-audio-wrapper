@@ -668,7 +668,6 @@ namespace android {
 		}
 
 		int setParameters(struct AudioHardwareANM *ANM, android::String8 const& keyValuePair) {
-			#if 0
 			AudioParameter param = AudioParameter(keyValuePair);
 			String8 value;
 
@@ -807,8 +806,8 @@ namespace android {
 				  */
 				}
 			}
-			 #endif
-			return shim_ZN7android16AudioHardwareANM13setParametersERKNS_7String8E(gANM, keyValuePair);
+
+			return NO_ERROR;
 		}
 		void closeOutputStream(struct AudioHardwareANM *ANM, android_audio_legacy::AudioStreamOut* a1) {
 			shim_ZN7android16AudioHardwareANM17closeOutputStreamEPNS_14AudioStreamOutE(gANM, a1);
