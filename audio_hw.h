@@ -124,6 +124,140 @@ struct audio_hw_device_sec
   struct AudioHardwareANM *mANM;
 };
 
+struct __attribute__((aligned(4))) CommandThread
+{
+  int unk83;
+  bool *unk841;
+  bool unk842;
+  bool unk843;
+  bool unk844;
+  bool unk851;
+  bool unk852;
+  bool unk853;
+  bool unk854;
+  int unk86;
+  int unk87;
+  int unk88;
+  int unk89;
+  int unk90;
+  int unk91;
+  int mMutex;
+  int unk94;
+  int unk95;
+  pthread_cond_t *mPthreadCond;
+  int unk97;
+  int unk98;
+  int unk99;
+  int unk100;
+  int unk101;
+  int unk102;
+  int unk103;
+  int unk104;
+};
+
+/* 154 */
+struct __attribute__((aligned(4))) AudioStreamOutANM
+{
+  int unk1;
+  struct AudioHardwareANM *mANM;
+  int mADMConnectionID1;
+  int mADMConnectionID2;
+  int unk4;
+  int unk5;
+  int unk6;
+  int unk7;
+  int unk8;
+  int unk9;
+  int unk10;
+  int unk11;
+  int unk12;
+  int unk13;
+  int unk14;
+  int unk15;
+  int unk16;
+  int unk17;
+  int unk18;
+  int unk19;
+  bool unk201;
+  bool unk202;
+  bool unk203;
+  bool unk204;
+  int unk21;
+  int unk22;
+  int unk23;
+  int unk24;
+  int unk25;
+  int unk26;
+  int unk27;
+  int unk28;
+  int unk29;
+  int unk30;
+  int unk31;
+  int unk32;
+  int unk33;
+  int unk34;
+  int unk35;
+  int unk36;
+  int unk37;
+  int unk38;
+  int unk39;
+  int unk40;
+  int unk41;
+  int unk42;
+  int unk43;
+  bool mDeviceListSize;
+  bool unk205;
+  bool unk206;
+  bool unk207;
+  bool mStandby;
+  bool unk452;
+  bool unk453;
+  bool unk454;
+  int mChannels;
+  int mSampleRate;
+  int mFormat;
+  int mAdmNumBufs1;
+  int mAdmNumBufs2;
+  int mAdmBufSize1;
+  int mAdmBufSize2;
+  int mAdmBufSharedMem1;
+  int mAdmBufSharedMem2;
+  int mCurBufIdx1;
+  int mCurBufIdx2;
+  int mMutex;
+  int unk59;
+  int unk60;
+  int mDevices;
+  int unk62;
+  int mLatency;
+  int mState;
+  int mStreamType;
+  bool mFmRadioConnectionID;
+  bool unk662;
+  bool unk663;
+  bool unk664;
+  bool unk671;
+  bool unk672;
+  bool unk673;
+  bool unk674;
+  int unk68;
+  int unk69;
+  int unk70;
+  int unk71;
+  int unk72;
+  int unk73;
+  int unk74;
+  int unk75;
+  int unk76;
+  int unk77;
+  int unk78;
+  int unk79;
+  int mMutex2;
+  int unk81;
+  int unk82;
+  struct CommandThread mCommandThread;
+};
+
 
 /* 26 */
 struct __attribute__((aligned(4))) AudioStreamInANM
@@ -218,5 +352,8 @@ struct __attribute__((aligned(4))) AudioHardwareANM
   int mFrameCount;
 };
 #endif
+
+typedef int special_routing_t;
+typedef int change_type_t;
 
 #endif

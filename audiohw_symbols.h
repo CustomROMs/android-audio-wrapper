@@ -5,6 +5,9 @@
 
 struct AudioHardwareANM;
 struct AudioStreamInANM;
+struct AudioStreamOutANM;
+struct DeviceList;
+struct Command;
 
 #ifdef __cplusplus
 extern "C" {
@@ -192,7 +195,7 @@ int (*shim_ZN7android16AudioStreamInANM7restoreEv)(struct AudioStreamInANM *inAN
 int (*shim_ZN7android16AudioStreamInANM6doReadEPvl)(struct AudioStreamInANM *inANM, void* a1, long a2);
 int (*shim_ZN7android16AudioStreamInANM4readEPvl)(struct AudioStreamInANM *inANM, void* a1, long a2);
 #ifdef __cplusplus
-int (*shim_ZN7android16AudioStreamInANM17refreshDeviceListEPNS_10DeviceListEijiPNS_16AudioHardwareANME)(struct AudioStreamInANM *inANM, DeviceList* a1, int a2, unsigned int a3, int a4, struct AudioHardwareANM* a5);
+int (*shim_ZN7android16AudioStreamInANM17refreshDeviceListEPNS_10DeviceListEijiPNS_16AudioHardwareANME)(struct AudioStreamInANM *inANM, struct DeviceList* a1, int a2, unsigned int a3, int a4, struct AudioHardwareANM* a5);
 #else
 int (*shim_ZN7android16AudioStreamInANM17refreshDeviceListEPNS_10DeviceListEijiPNS_16AudioHardwareANME)(struct AudioStreamInANM *inANM, int* a1, int a2, unsigned int a3, int a4, struct AudioHardwareANM* a5);
 #endif
@@ -211,8 +214,123 @@ int (*shim_ZN7android16AudioStreamInANM13setParametersERKNS_7String8E)(struct Au
 int (*shim_ZN7android16AudioStreamInANM13setParametersERKNS_7String8E)(struct AudioStreamInANM *inANM, int a1);
 #endif
 int (*shim_ZN7android16AudioStreamInANM17changeDeviceStateEi)(struct AudioStreamInANM *inANM, int a1);
+
+// AudioStreamOutANM
+int (*shim_ZN7android17AudioStreamOutANM11updateStateEi)(struct AudioStreamOutANM *OutANM, int a1);
+int (*shim_ZN7android17AudioStreamOutANM15getCurrentStateEv)(struct AudioStreamOutANM *OutANM);
+int (*shim_ZN7android17AudioStreamOutANM10normalModeEv)(struct AudioStreamOutANM *OutANM);
+int (*shim_ZN7android17AudioStreamOutANM12forceRerouteEv)(struct AudioStreamOutANM *OutANM);
+int (*shim_ZN7android17AudioStreamOutANM14setFactoryTestEj)(struct AudioStreamOutANM *OutANM, unsigned int a1);
+int (*shim_ZN7android17AudioStreamOutANM15setStereoToMonoEb)(struct AudioStreamOutANM *OutANM, bool a1);
+int (*shim_ZN7android17AudioStreamOutANM5setupEPiPjS2_j)(struct AudioStreamOutANM *OutANM, int* a1, unsigned int* a2, unsigned int* a3, unsigned int a4);
+int (*shim_ZNK7android17AudioStreamOutANM10sampleRateEv)(struct AudioStreamOutANM *OutANM);
+int (*shim_ZNK7android17AudioStreamOutANM8channelsEv)(struct AudioStreamOutANM *OutANM);
+int (*shim_ZNK7android17AudioStreamOutANM6formatEv)(struct AudioStreamOutANM *OutANM);
+int (*shim_ZN7android17AudioStreamOutANM9setVolumeEff)(struct AudioStreamOutANM *OutANM, float a1, float a2);
+int (*shim_ZN7android17AudioStreamOutANM17getRenderPositionEPj)(struct AudioStreamOutANM *OutANM, unsigned int* a1);
+#ifdef __cplusplus
+int (*shim_ZN7android17AudioStreamOutANM15getNumParameterEPKcRj)(struct AudioStreamOutANM *OutANM, char const* a1, unsigned int& a2);
+#else
+int (*shim_ZN7android17AudioStreamOutANM15getNumParameterEPKcRj)(struct AudioStreamOutANM *OutANM, char const* a1, unsigned int * a2);
+#endif
+
+#ifdef __cplusplus
+int (*shim_ZN7android17AudioStreamOutANM13getParametersERKNS_7String8E)(struct AudioStreamOutANM *OutANM, android::String8 const& a1);
+#else
+int (*shim_ZN7android17AudioStreamOutANM13getParametersERKNS_7String8E)(struct AudioStreamOutANM *OutANM, char *a1);
+#endif
+int (*shim_ZNK7android17AudioStreamOutANM16calc_buffer_sizeEv)(struct AudioStreamOutANM *OutANM);
+int (*shim_ZNK7android17AudioStreamOutANM7latencyEv)(struct AudioStreamOutANM *OutANM);
+int (*shim_ZNK7android17AudioStreamOutANM10bufferSizeEv)(struct AudioStreamOutANM *OutANM);
+int (*shim_ZN7android17AudioStreamOutANM13reconnect_admEv)(struct AudioStreamOutANM *OutANM);
+#ifdef __cplusplus
+int (*shim_ZN7android17AudioStreamOutANM14preCloseDeviceEPNS_10DeviceListE)(struct AudioStreamOutANM *OutANM, struct DeviceList* a1);
+#else
+int (*shim_ZN7android17AudioStreamOutANM14preCloseDeviceEPNS_10DeviceListE)(struct AudioStreamOutANM *OutANM, int* a1);
+#endif
+
+int (*shim_ZN7android17AudioStreamOutANM16connectIfFmRadioEv)(struct AudioStreamOutANM *OutANM);
+int (*shim_ZN7android17AudioStreamOutANM19disconnectIfFmRadioEv)(struct AudioStreamOutANM *OutANM);
+
+#ifdef __cplusplus
+int (*shim_ZN7android17AudioStreamOutANM17getSpecialRoutingEPNS_10DeviceListES2_)(struct AudioStreamOutANM *OutANM, struct DeviceList* a1, struct DeviceList* a2);
+#else
+int (*shim_ZN7android17AudioStreamOutANM17getSpecialRoutingEPNS_10DeviceListES2_)(struct AudioStreamOutANM *OutANM, int* a1, int* a2);
+#endif
+
+int (*shim_ZN7android17AudioStreamOutANM16liveOrgansUpdateEb)(struct AudioStreamOutANM *OutANM, bool a1);
+int (*shim_ZN7android17AudioStreamOutANM13getChangeTypeEiibbNS0_17special_routing_tE)(struct AudioStreamOutANM *OutANM, int a1, int a2, bool a3, bool a4, special_routing_t a5);
+int (*shim_ZN7android17AudioStreamOutANM14changeRefCountE19audio_stream_type_ti)(struct AudioStreamOutANM *OutANM, audio_stream_type_t a1, int a2);
+int (*shim_ZN7android17AudioStreamOutANM24getHighestPriorityStreamEv)(struct AudioStreamOutANM *OutANM);
+#ifdef __cplusplus
+int (*shim_ZN7android17AudioStreamOutANM17refreshDeviceListEPNS_10DeviceListEij19audio_stream_type_tPNS_16AudioHardwareANME)(struct AudioStreamOutANM *OutANM, struct DeviceList* a1, int a2, unsigned int a3, audio_stream_type_t a4, struct AudioHardwareANM* a5);
+#else
+int (*shim_ZN7android17AudioStreamOutANM17refreshDeviceListEPNS_10DeviceListEij19audio_stream_type_tPNS_16AudioHardwareANME)(struct AudioStreamOutANM *OutANM, int* a1, int a2, unsigned int a3, audio_stream_type_t a4, struct AudioHardwareANM* a5);
+#endif
+int (*shim_ZN7android17AudioStreamOutANM19updateConfigurationEij19audio_stream_type_t)(struct AudioStreamOutANM *OutANM, int a1, unsigned int a2, audio_stream_type_t a3);
+#ifdef __cplusplus
+int (*shim_ZN7android17AudioStreamOutANM10willChangeEij19audio_stream_type_tRbS2_RNS0_17special_routing_tE)(struct AudioStreamOutANM *OutANM, int a1, unsigned int a2, audio_stream_type_t a3, bool& a4, bool& a5, special_routing_t a6);
+#else
+int (*shim_ZN7android17AudioStreamOutANM10willChangeEij19audio_stream_type_tRbS2_RNS0_17special_routing_tE)(struct AudioStreamOutANM *OutANM, int a1, unsigned int a2, audio_stream_type_t a3, bool* a4, bool* a5, special_routing_t a6);
+#endif
+
+int (*shim_ZN7android17AudioStreamOutANM15getConnectionIdEi)(struct AudioStreamOutANM *OutANM, int a1);
+
+#ifdef __cplusplus
+int (*shim_ZN7android17AudioStreamOutANM11closeDeviceEPNS_9DeviceMapE)(struct AudioStreamOutANM *OutANM, android::DeviceMap* a1);
+int (*shim_ZN7android17AudioStreamOutANM12closeDevicesEPNS_10DeviceListE)(struct AudioStreamOutANM *OutANM, struct DeviceList* a1);
+#else
+int (*shim_ZN7android17AudioStreamOutANM11closeDeviceEPNS_9DeviceMapE)(struct AudioStreamOutANM *OutANM, int* a1);
+int (*shim_ZN7android17AudioStreamOutANM12closeDevicesEPNS_10DeviceListE)(struct AudioStreamOutANM *OutANM, int* a1);
+#endif
+
+int (*shim_ZN7android17AudioStreamOutANM7standbyEv)(struct AudioStreamOutANM *OutANM);
+
+#ifdef __cplusplus
+int (*shim_ZN7android17AudioStreamOutANM10openDeviceEPNS_9DeviceMapEb)(struct AudioStreamOutANM *OutANM, android::DeviceMap* a1, bool a2);
+#else
+int (*shim_ZN7android17AudioStreamOutANM10openDeviceEPNS_9DeviceMapEb)(struct AudioStreamOutANM *OutANM, int* a1, bool a2);
+#endif
+	
+int (*shim_ZN7android17AudioStreamOutANM12doTransitionEij19audio_stream_type_tNS0_13change_type_tE)(struct AudioStreamOutANM *OutANM, int a1, unsigned int a2, audio_stream_type_t a3, change_type_t a4);
+int (*shim_ZN7android17AudioStreamOutANM12changeDeviceEij19audio_stream_type_tb)(struct AudioStreamOutANM *OutANM, int a1, unsigned int a2, audio_stream_type_t a3, bool a4);
+int (*shim_ZN7android17AudioStreamOutANM11openDevicesEv)(struct AudioStreamOutANM *OutANM);
+int (*shim_ZN7android17AudioStreamOutANM7restoreEv)(struct AudioStreamOutANM *OutANM);
+int (*shim_ZN7android17AudioStreamOutANM7doWriteEPKvji)(struct AudioStreamOutANM *OutANM, void const* a1, unsigned int a2, int a3);
+int (*shim_ZN7android17AudioStreamOutANM5writeEPKvj)(struct AudioStreamOutANM *OutANM, void const* a1, unsigned int a2);
+int (*shim_ZN7android17AudioStreamOutANM13CommandThreadC2EPS0_)(struct AudioStreamOutANM *OutANM, struct AudioStreamOutANM* a1);
+int (*shim_ZN7android17AudioStreamOutANM13CommandThreadC1EPS0_)(struct AudioStreamOutANM *OutANM, struct AudioStreamOutANM* a1);
+int (*shim_ZN7android17AudioStreamOutANM13CommandThread5startEv)(struct AudioStreamOutANM *OutANM);
+int (*shim_ZN7android17AudioStreamOutANMC2EPNS_16AudioHardwareANME)(struct AudioStreamOutANM *OutANM, struct AudioHardwareANM* a1);
+int (*shim_ZN7android17AudioStreamOutANM13CommandThread4exitEv)(struct AudioStreamOutANM *OutANM);
+
+#ifdef __cplusplus
+int (*shim_ZN7android17AudioStreamOutANM13CommandThread4dumpERNS_7String8E)(struct AudioStreamOutANM *OutANM, String8& a1);
+int (*shim_ZN7android17AudioStreamOutANM4dumpEiRKNS_6VectorINS_8String16EEE)(struct AudioStreamOutANM *OutANM, int a1, Vector<String16> const& a2);
+#else
+int (*shim_ZN7android17AudioStreamOutANM13CommandThread4dumpERNS_7String8E)(struct AudioStreamOutANM *OutANM, char **a1);
+int (*shim_ZN7android17AudioStreamOutANM4dumpEiRKNS_6VectorINS_8String16EEE)(struct AudioStreamOutANM *OutANM, int a1, int *a2);
+#endif
+
+int (*shim_ZN7android17AudioStreamOutANM13CommandThread15insertCommand_lEPNS1_7CommandE)(struct AudioStreamOutANM *OutANM, struct Command* a1);
+int (*shim_ZN7android17AudioStreamOutANM13CommandThread8setForceEv)(struct AudioStreamOutANM *OutANM);
+int (*shim_ZN7android17AudioStreamOutANM13doUpdateForceEv)(struct AudioStreamOutANM *OutANM);
+int (*shim_ZN7android17AudioStreamOutANM13CommandThread9setStreamE19audio_stream_type_t)(struct AudioStreamOutANM *OutANM, audio_stream_type_t a1);
+int (*shim_ZN7android17AudioStreamOutANM14doUpdateStreamE19audio_stream_type_t)(struct AudioStreamOutANM *OutANM, audio_stream_type_t a1);
+int (*shim_ZN7android17AudioStreamOutANM13CommandThread10setDevicesEj)(struct AudioStreamOutANM *OutANM, unsigned int a1);
+int (*shim_ZN7android17AudioStreamOutANM15doUpdateDevicesEj)(struct AudioStreamOutANM *OutANM, unsigned int a1);
+#ifdef __cplusplus
+int (*shim_ZN7android17AudioStreamOutANM13setParametersERKNS_7String8E)(struct AudioStreamOutANM *OutANM, String8 const& a1);
+#else
+int (*shim_ZN7android17AudioStreamOutANM13setParametersERKNS_7String8E)(struct AudioStreamOutANM *OutANM, char **a1);
+#endif
+int (*shim_ZN7android17AudioStreamOutANM13CommandThread8setStateEi)(struct AudioStreamOutANM *OutANM, int a1);
+int (*shim_ZN7android17AudioStreamOutANM13doUpdateStateEi)(struct AudioStreamOutANM *OutANM, int a1);
+int (*shim_ZN7android17AudioStreamOutANM13CommandThread10threadLoopEv)(struct AudioStreamOutANM *OutANM);
+
 #ifdef __cplusplus
 }
 #endif
+
 
 #endif
