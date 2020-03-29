@@ -56,7 +56,7 @@ struct AudioHardwareANM *gANM;
 
 SortedVector<struct AudioStreamInANM*> *gInputs;
 SortedVector<struct AudioStreamOutANM*> *gOutputs;
-
+KeyedVector<int, struct AudioStreamInANM*> *gInANMs;
 
 extern "C" {
 	int legacy_adev_open(const hw_module_t* module, const char* name,
@@ -104,11 +104,13 @@ struct legacy_audio_device {
     struct AudioHardwareInterface *hwif;
 };
 
-/*struct legacy_stream_out {
+struct legacy_stream_out {
     struct audio_stream_out stream;
 
-    AudioStreamOut *legacy_out;
-};*/
+    void *unk0;
+    void *unk1;
+    struct AudioStreamOutANM *legacy_out;
+};
 
 struct legacy_stream_in {
     struct audio_stream_in stream;
@@ -185,19 +187,30 @@ static inline struct AudioStreamInANM* toInANMc(const struct audio_stream *in) {
 	return inANM;
 }
 
+static inline struct AudioStreamOutANM* toOutANM(struct audio_stream *out) {
+	struct legacy_stream_out *lout;
+	lout = (struct legacy_stream_out *)WRAPPED_STREAM_OUT(out);
+	struct AudioStreamOutANM *outANM = (struct AudioStreamOutANM*)lout->legacy_out;
+	return outANM;
+}
+
+static inline struct AudioStreamOutANM* toOutANMc(const struct audio_stream *out) {
+	struct legacy_stream_out *lout;
+	lout = (struct legacy_stream_out *)WRAPPED_STREAM_OUT(out);
+	struct AudioStreamOutANM *outANM = (struct AudioStreamOutANM*)lout->legacy_out;
+	return outANM;
+}
 
 static uint32_t out_get_sample_rate(const struct audio_stream *stream)
 {
-    /*const struct legacy_stream_out *out =
-        reinterpret_cast<const struct legacy_stream_out *>(stream);
-    return out->legacy_out->sampleRate();*/
-    //return DEFAULT_OUT_SAMPLING_RATE;
-    RETURN_WRAPPED_STREAM_OUT_COMMON_CALL(stream, get_sample_rate);
+    struct AudioStreamOutANM *outANM = toOutANMc(stream);
+	
+	return outANM->mSampleRate;
 }
 
 static int out_set_sample_rate(struct audio_stream *stream, uint32_t rate)
 {
-    RETURN_WRAPPED_STREAM_OUT_COMMON_CALL(stream, set_sample_rate, rate);
+    return 0;
 }
 
 static size_t out_get_buffer_size(const struct audio_stream *stream)
@@ -409,9 +422,10 @@ static int adev_open_output_stream(struct audio_hw_device *dev,
 			      const char *address __unused)
 {
     struct wrapper_stream_out *out;
+	struct AudioStreamOutANM * OutANM;
     int ret;
     ALOGI("%s: devices 0x%x", __FUNCTION__, devices);
-
+	
     out = (struct wrapper_stream_out *)calloc(1, sizeof(struct wrapper_stream_out));
     if (!out)
         return -ENOMEM;
@@ -424,6 +438,9 @@ static int adev_open_output_stream(struct audio_hw_device *dev,
 
     if(ret < 0)
         goto err_open;
+	
+	OutANM = toOutANM((struct audio_stream*)out);
+	ALOGE("%s: sampleRate = %d, format = %d, channel_mask=%p, conn id=%d, mAdmNumBufs1=%d, mAdmBufSize1=%d, mAdmBufSharedMem1=%d", __func__, OutANM->mSampleRate, OutANM->mFormat, OutANM->mChannels, OutANM->mADMConnectionID1, OutANM->mAdmNumBufs1, OutANM->mAdmBufSize1, OutANM->mAdmBufSharedMem1);
 
     out->stream.common.get_sample_rate = out_get_sample_rate;
     out->stream.common.set_sample_rate = out_set_sample_rate;
@@ -515,9 +532,14 @@ static int adev_set_mode(struct audio_hw_device *dev, audio_mode_t mode)
     return android::AudioHardwareANM::setMode(gANM, mode);
 }
 
+
 static int adev_set_mic_mute(struct audio_hw_device *dev, bool state)
 {
-    RETURN_WRAPPED_DEVICE_CALL(dev, set_mic_mute, state);
+	int ret = WRAPPED_DEVICE(dev)->set_mic_mute(WRAPPED_DEVICE(dev), state);
+    
+	ALOGE("%s: gANM->mIsMicMuted=%d state=%d", __func__, gANM->mIsMicMuted, state);
+	//gDevice->set_mic_mute(gDevice, state);
+	return ret;
 }
 
 static int adev_get_mic_mute(const struct audio_hw_device *dev, bool *state)
@@ -553,7 +575,7 @@ static void adev_close_input_stream(struct audio_hw_device *dev,
 
 static int adev_dump(const audio_hw_device_t *dev, int fd)
 {
-    RETURN_WRAPPED_DEVICE_CALL(dev, dump, fd);
+    return 0;
 }
 
 static int adev_close(hw_device_t *dev)
@@ -563,6 +585,9 @@ static int adev_close(hw_device_t *dev)
     free(dev);
 	
 	gDevice->common.close((hw_device_t*)gDevice);
+	
+	delete gInANMs;
+
     return 0;
 }
 
@@ -590,6 +615,8 @@ static int adev_open(const hw_module_t* module, const char* name,
         free(adev);
         return ret;
     }
+	
+	gInANMs = new KeyedVector<int, struct AudioStreamInANM*>;
 
     audio_hw_device_sec *legacy_device = (audio_hw_device_sec *)adev->wrapped_device;
     gANM = legacy_device->mANM;
