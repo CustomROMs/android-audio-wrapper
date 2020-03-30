@@ -300,17 +300,18 @@ static ssize_t out_write(struct audio_stream_out *stream, const void* buffer,
 static int out_get_render_position(const struct audio_stream_out *stream,
                                    uint32_t *dsp_frames)
 {
-    RETURN_WRAPPED_STREAM_OUT_CALL(stream, get_render_position, dsp_frames);
+	*dsp_frames=0;
+	return NO_ERROR;
 }
 
 static int out_add_audio_effect(const struct audio_stream *stream, effect_handle_t effect)
 {
-    RETURN_WRAPPED_STREAM_OUT_COMMON_CALL(stream, add_audio_effect, effect);
+    return NO_ERROR;
 }
 
 static int out_remove_audio_effect(const struct audio_stream *stream, effect_handle_t effect)
 {
-    RETURN_WRAPPED_STREAM_OUT_COMMON_CALL(stream, remove_audio_effect, effect);
+    return NO_ERROR;
 }
 
 /** audio_stream_in implementation **/
