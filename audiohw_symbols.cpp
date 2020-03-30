@@ -804,8 +804,20 @@ namespace android {
 		void getCurrentCallInput(struct AudioHardwareANM *ANM) {
 			shim_ZN7android16AudioHardwareANM19getCurrentCallInputEv(gANM);
 		}
-		int getActiveState(struct AudioHardwareANM *ANM, int a1) {
-			return shim_ZN7android16AudioHardwareANM14getActiveStateEi(gANM, a1);
+		int getActiveState(struct AudioHardwareANM *ANM, int csCallState) {
+			  if ( csCallState & 1 )
+			  {
+				return 1;
+			  }
+			  else if ( csCallState & 2 )
+			  {
+				return 2;
+			  }
+			  else if ( (csCallState & 0x5E) == 8 )
+			  {
+				return 8;
+			  }
+			return 0;
 		}
 		void lock(struct AudioHardwareANM *ANM) {
 			shim_ZN7android16AudioHardwareANM4lockEv(gANM);
@@ -852,11 +864,33 @@ namespace android {
 			}
 			return result;
 		}
-		void setRxMute(struct AudioHardwareANM *ANM, bool a1) {
-			shim_ZN7android16AudioHardwareANM9setRxMuteEb(gANM, a1);
+		void setRxMute(struct AudioHardwareANM *ANM, bool mute) {
+			 int rc; // r1@3
+			  int volume; // r1@4 MAPDST
+
+			  if ( mute != ANM->mRxMuted )
+			  {
+				ANM->mRxMuted = mute;
+				ALOGV("setRxMute(%d)", mute);
+				if ( ANM->mRxMuted )
+				{
+				 ALOGI("adm_api: ste_adm_client_set_cscall_downstream_volume(%d) rx_mute",
+					0x80000000);
+				  rc = ste_adm_client_set_cscall_downstream_volume(0x80000000);
+				  android::AudioHardwareANM::handleError(ANM, rc, 5);
+				}
+				else
+				{
+				  android::AudioHardwareANM::setVoiceVolume(ANM, ANM->mVoiceVolumeLevel);
+				}
+			  }
 		}
-		void setRingbackMute(struct AudioHardwareANM *ANM, bool a1) {
-			shim_ZN7android16AudioHardwareANM15setRingbackMuteEb(gANM, a1);
+		void setRingbackMute(struct AudioHardwareANM *ANM, bool mute) {
+			  ANM->mMuted = mute;
+			  bool rxMute = true;
+			  if ( !ANM->mMuted )
+				rxMute = (ANM->csCallState >> 6) & 1;
+			  return android::AudioHardwareANM::setRxMute(ANM, rxMute);
 		}
 		void onRingback(struct AudioHardwareANM *ANM, bool a1) {
 			shim_ZN7android16AudioHardwareANM10onRingbackEb(gANM, a1);

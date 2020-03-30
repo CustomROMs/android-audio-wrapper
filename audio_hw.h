@@ -368,11 +368,11 @@ struct __attribute__((aligned(4))) AudioHardwareANM
   ste_adm_tty_mode_t mTtyMode;
   char unk_xx[496];
   int unk17;
-  bool unk18;
-  bool unk20;
+  bool mRxMuted;
+  bool mMuted;
   bool unk21;
   bool unk22;
-  int unk23;
+  int mVoiceVolumeLevel;
   int devices1;
   int devices2;
   int mFormat;
