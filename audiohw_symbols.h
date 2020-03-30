@@ -7,6 +7,7 @@ struct AudioHardwareANM;
 struct AudioStreamInANM;
 struct AudioStreamOutANM;
 struct DeviceList;
+struct CommandThread;
 struct Command;
 
 #ifdef __cplusplus
@@ -298,35 +299,38 @@ int (*shim_ZN7android17AudioStreamOutANM11openDevicesEv)(struct AudioStreamOutAN
 int (*shim_ZN7android17AudioStreamOutANM7restoreEv)(struct AudioStreamOutANM *OutANM);
 int (*shim_ZN7android17AudioStreamOutANM7doWriteEPKvji)(struct AudioStreamOutANM *OutANM, void const* a1, unsigned int a2, int a3);
 int (*shim_ZN7android17AudioStreamOutANM5writeEPKvj)(struct AudioStreamOutANM *OutANM, void const* a1, unsigned int a2);
-int (*shim_ZN7android17AudioStreamOutANM13CommandThreadC2EPS0_)(struct AudioStreamOutANM *OutANM, struct AudioStreamOutANM* a1);
-int (*shim_ZN7android17AudioStreamOutANM13CommandThreadC1EPS0_)(struct AudioStreamOutANM *OutANM, struct AudioStreamOutANM* a1);
-int (*shim_ZN7android17AudioStreamOutANM13CommandThread5startEv)(struct AudioStreamOutANM *OutANM);
 int (*shim_ZN7android17AudioStreamOutANMC2EPNS_16AudioHardwareANME)(struct AudioStreamOutANM *OutANM, struct AudioHardwareANM* a1);
-int (*shim_ZN7android17AudioStreamOutANM13CommandThread4exitEv)(struct AudioStreamOutANM *OutANM);
 
 #ifdef __cplusplus
-int (*shim_ZN7android17AudioStreamOutANM13CommandThread4dumpERNS_7String8E)(struct AudioStreamOutANM *OutANM, String8& a1);
 int (*shim_ZN7android17AudioStreamOutANM4dumpEiRKNS_6VectorINS_8String16EEE)(struct AudioStreamOutANM *OutANM, int a1, Vector<String16> const& a2);
 #else
-int (*shim_ZN7android17AudioStreamOutANM13CommandThread4dumpERNS_7String8E)(struct AudioStreamOutANM *OutANM, char **a1);
 int (*shim_ZN7android17AudioStreamOutANM4dumpEiRKNS_6VectorINS_8String16EEE)(struct AudioStreamOutANM *OutANM, int a1, int *a2);
 #endif
 
-int (*shim_ZN7android17AudioStreamOutANM13CommandThread15insertCommand_lEPNS1_7CommandE)(struct AudioStreamOutANM *OutANM, struct Command* a1);
-int (*shim_ZN7android17AudioStreamOutANM13CommandThread8setForceEv)(struct AudioStreamOutANM *OutANM);
 int (*shim_ZN7android17AudioStreamOutANM13doUpdateForceEv)(struct AudioStreamOutANM *OutANM);
-int (*shim_ZN7android17AudioStreamOutANM13CommandThread9setStreamE19audio_stream_type_t)(struct AudioStreamOutANM *OutANM, audio_stream_type_t a1);
 int (*shim_ZN7android17AudioStreamOutANM14doUpdateStreamE19audio_stream_type_t)(struct AudioStreamOutANM *OutANM, audio_stream_type_t a1);
-int (*shim_ZN7android17AudioStreamOutANM13CommandThread10setDevicesEj)(struct AudioStreamOutANM *OutANM, unsigned int a1);
 int (*shim_ZN7android17AudioStreamOutANM15doUpdateDevicesEj)(struct AudioStreamOutANM *OutANM, unsigned int a1);
 #ifdef __cplusplus
 int (*shim_ZN7android17AudioStreamOutANM13setParametersERKNS_7String8E)(struct AudioStreamOutANM *OutANM, String8 const& a1);
 #else
 int (*shim_ZN7android17AudioStreamOutANM13setParametersERKNS_7String8E)(struct AudioStreamOutANM *OutANM, char **a1);
 #endif
-int (*shim_ZN7android17AudioStreamOutANM13CommandThread8setStateEi)(struct AudioStreamOutANM *OutANM, int a1);
 int (*shim_ZN7android17AudioStreamOutANM13doUpdateStateEi)(struct AudioStreamOutANM *OutANM, int a1);
-int (*shim_ZN7android17AudioStreamOutANM13CommandThread10threadLoopEv)(struct AudioStreamOutANM *OutANM);
+
+
+// CommandThread
+int (*shim_ZN7android17AudioStreamOutANM13CommandThread5startEv)(struct CommandThread *CT);
+int (*shim_ZN7android17AudioStreamOutANM13CommandThread4exitEv)(struct CommandThread *CT);
+#ifdef __cplusplus
+int (*shim_ZN7android17AudioStreamOutANM13CommandThread4dumpERNS_7String8E)(struct CommandThread *CT, android::String8& a1);
+#else
+int (*shim_ZN7android17AudioStreamOutANM13CommandThread4dumpERNS_7String8E)(struct CommandThread *CT, char *a1);
+#endif
+int (*shim_ZN7android17AudioStreamOutANM13CommandThread15insertCommand_lEPNS1_7CommandE)(struct CommandThread *CT, struct Command* c);
+int (*shim_ZN7android17AudioStreamOutANM13CommandThread8setForceEv)(struct CommandThread *CT);
+int (*shim_ZN7android17AudioStreamOutANM13CommandThread9setStreamE19audio_stream_type_t)(struct CommandThread *CT, audio_stream_type_t a1);
+int (*shim_ZN7android17AudioStreamOutANM13CommandThread10setDevicesEj)(struct CommandThread *CT, unsigned int a1);
+int (*shim_ZN7android17AudioStreamOutANM13CommandThread8setStateEi)(struct CommandThread *CT, int a1);
 
 #ifdef __cplusplus
 }

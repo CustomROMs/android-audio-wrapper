@@ -15,26 +15,26 @@ class DeviceList;
 #include "audiohw_symbols.h"
 
 namespace android {
-		namespace AudioHardwareBase1 {
-				int setMode(struct AudioHardwareANM *ANM, int mode) {
-					return shim_ZN7android17AudioHardwareBase7setModeEi(ANM, mode);
-				}
-				int getMasterVolume(struct AudioHardwareANM *ANM, float* volume) {
-					return shim_ZN7android17AudioHardwareBase15getMasterVolumeEPf(ANM, volume);
-				}
-				int dumpState(struct AudioHardwareANM *ANM, int fd, const Vector<String16>& args) {
-					return shim_ZN7android17AudioHardwareBase9dumpStateEiRKNS_6VectorINS_8String16EEE(ANM, fd, args);
-				}
-				int setParameters(struct AudioHardwareANM *ANM, const String8& keyValuePairs) {
-					return shim_ZN7android17AudioHardwareBase13setParametersERKNS_7String8E(ANM, keyValuePairs);
-				}
-				char *getParameters(struct AudioHardwareANM *ANM, const String8& keyValuePairs) {
-					return shim_ZN7android17AudioHardwareBase13getParametersERKNS_7String8E(ANM, keyValuePairs);
-				}
-				int getInputBufferSize(struct AudioHardwareANM *ANM, uint32_t sampleRate, int format, int channelCount) {
-					return shim_ZN7android17AudioHardwareBase18getInputBufferSizeEjii(ANM, sampleRate, format, channelCount);
-				}
+	namespace AudioHardwareBase1 {
+		int setMode(struct AudioHardwareANM *ANM, int mode) {
+			return shim_ZN7android17AudioHardwareBase7setModeEi(ANM, mode);
 		}
+		int getMasterVolume(struct AudioHardwareANM *ANM, float* volume) {
+			return shim_ZN7android17AudioHardwareBase15getMasterVolumeEPf(ANM, volume);
+		}
+		int dumpState(struct AudioHardwareANM *ANM, int fd, const Vector<String16>& args) {
+			return shim_ZN7android17AudioHardwareBase9dumpStateEiRKNS_6VectorINS_8String16EEE(ANM, fd, args);
+		}
+		int setParameters(struct AudioHardwareANM *ANM, const String8& keyValuePairs) {
+			return shim_ZN7android17AudioHardwareBase13setParametersERKNS_7String8E(ANM, keyValuePairs);
+		}
+		char *getParameters(struct AudioHardwareANM *ANM, const String8& keyValuePairs) {
+			return shim_ZN7android17AudioHardwareBase13getParametersERKNS_7String8E(ANM, keyValuePairs);
+		}
+		int getInputBufferSize(struct AudioHardwareANM *ANM, uint32_t sampleRate, int format, int channelCount) {
+			return shim_ZN7android17AudioHardwareBase18getInputBufferSizeEjii(ANM, sampleRate, format, channelCount);
+		}
+	}
 }
 
 namespace android {
@@ -328,56 +328,65 @@ namespace android {
 				  pthread_mutex_unlock(&outANM->mMutex);
 				  return ret;
                 }
-                int start(struct AudioStreamOutANM *OutANM) {
-                        return shim_ZN7android17AudioStreamOutANM13CommandThread5startEv(OutANM);
-                }
                 int AudioStreamOutANM(struct AudioStreamOutANM *OutANM, struct AudioHardwareANM* a1) {
                         return shim_ZN7android17AudioStreamOutANMC2EPNS_16AudioHardwareANME(OutANM, a1);
                 }
-                int exit(struct AudioStreamOutANM *OutANM) {
-                        return shim_ZN7android17AudioStreamOutANM13CommandThread4exitEv(OutANM);
-                }
-                int dump(struct AudioStreamOutANM *OutANM, android::String8& a1) {
-                        return shim_ZN7android17AudioStreamOutANM13CommandThread4dumpERNS_7String8E(OutANM, a1);
-                }
+ 
                 int dump(struct AudioStreamOutANM *OutANM, int a1, Vector<String16> const& a2) {
                         return shim_ZN7android17AudioStreamOutANM4dumpEiRKNS_6VectorINS_8String16EEE(OutANM, a1, a2);
                 }
-                int insertCommand_l(struct AudioStreamOutANM *OutANM, struct Command* a1) {
-                        return shim_ZN7android17AudioStreamOutANM13CommandThread15insertCommand_lEPNS1_7CommandE(OutANM, a1);
-                }
-                int setForce(struct AudioStreamOutANM *OutANM) {
-                        return shim_ZN7android17AudioStreamOutANM13CommandThread8setForceEv(OutANM);
-                }
+
                 int doUpdateForce(struct AudioStreamOutANM *OutANM) {
                         return shim_ZN7android17AudioStreamOutANM13doUpdateForceEv(OutANM);
                 }
-                int setStream(struct AudioStreamOutANM *OutANM, audio_stream_type_t a1) {
-                        return shim_ZN7android17AudioStreamOutANM13CommandThread9setStreamE19audio_stream_type_t(OutANM, a1);
-                }
+
                 int doUpdateStream(struct AudioStreamOutANM *OutANM, audio_stream_type_t a1) {
                         return shim_ZN7android17AudioStreamOutANM14doUpdateStreamE19audio_stream_type_t(OutANM, a1);
                 }
-                int setDevices(struct AudioStreamOutANM *OutANM, unsigned int a1) {
-                        return shim_ZN7android17AudioStreamOutANM13CommandThread10setDevicesEj(OutANM, a1);
-                }
-                int doUpdateDevices(struct AudioStreamOutANM *OutANM, unsigned int a1) {
-                        return shim_ZN7android17AudioStreamOutANM15doUpdateDevicesEj(OutANM, a1);
-                }
+
                 int setParameters(struct AudioStreamOutANM *OutANM, String8 const& a1) {
                         return shim_ZN7android17AudioStreamOutANM13setParametersERKNS_7String8E(OutANM, a1);
                 }
-                int setState(struct AudioStreamOutANM *OutANM, int a1) {
-                        return shim_ZN7android17AudioStreamOutANM13CommandThread8setStateEi(OutANM, a1);
-                }
+
                 int doUpdateState(struct AudioStreamOutANM *OutANM, int a1) {
                         return shim_ZN7android17AudioStreamOutANM13doUpdateStateEi(OutANM, a1);
                 }
-                int threadLoop(struct AudioStreamOutANM *OutANM) {
-                        return shim_ZN7android17AudioStreamOutANM13CommandThread10threadLoopEv(OutANM);
-                }
         }
 }
+
+
+namespace android {
+	namespace AudioStreamOutANM {
+		   namespace CommandThread {
+			int start(struct CommandThread *CT) {
+				   return shim_ZN7android17AudioStreamOutANM13CommandThread5startEv(CT);
+			}
+			int exit(struct CommandThread *CT) {
+				   return shim_ZN7android17AudioStreamOutANM13CommandThread4exitEv(CT);
+			}
+			int dump(struct CommandThread *CT, android::String8& a1) {
+				   return shim_ZN7android17AudioStreamOutANM13CommandThread4dumpERNS_7String8E(CT, a1);
+			}
+			int insertCommand_l(struct CommandThread *CT, struct Command* c) {
+				   return shim_ZN7android17AudioStreamOutANM13CommandThread15insertCommand_lEPNS1_7CommandE(CT, c);
+			}
+			int setForce(struct CommandThread *CT) {
+				   return shim_ZN7android17AudioStreamOutANM13CommandThread8setForceEv(CT);
+			}
+			int setStream(struct CommandThread *CT, audio_stream_type_t a1) {
+				   return shim_ZN7android17AudioStreamOutANM13CommandThread9setStreamE19audio_stream_type_t(CT, a1);
+			}
+			int setDevices(struct CommandThread *CT, unsigned int a1) {
+				   return shim_ZN7android17AudioStreamOutANM13CommandThread10setDevicesEj(CT, a1);
+			}
+			int setState(struct CommandThread *CT, int a1) {
+				   return shim_ZN7android17AudioStreamOutANM13CommandThread8setStateEi(CT, a1);
+			}
+		}
+	}
+}
+
+
 
 namespace android {
 	namespace AudioStreamInANM {

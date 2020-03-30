@@ -285,7 +285,33 @@ struct __attribute__((aligned(4))) AudioStreamOutANM
   pthread_mutex_t mMutex2;
   int unk81;
   int unk82;
-  struct CommandThread mCommandThread;
+  struct CommandThread *mCommandThread;
+  bool *unk841;
+  bool unk842;
+  bool unk843;
+  bool unk844;
+  bool unk851;
+  bool unk852;
+  bool unk853;
+  bool unk854;
+  int unk86;
+  int unk87;
+  int unk88;
+  int unk89;
+  int unk90;
+  int unk91;
+  int mCTMutex;
+  int unk94;
+  int unk95;
+  pthread_cond_t *mPthreadCond;
+  int unk97;
+  int unk98;
+  int unk99;
+  int unk100;
+  int unk101;
+  int unk102;
+  int unk103;
+  int unk104;
 };
 
 
