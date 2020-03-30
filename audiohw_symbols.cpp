@@ -168,8 +168,134 @@ namespace android {
                 int restore(struct AudioStreamOutANM *OutANM) {
                         return shim_ZN7android17AudioStreamOutANM7restoreEv(OutANM);
                 }
-                int doWrite(struct AudioStreamOutANM *OutANM, void const* a1, unsigned int a2, int a3) {
-                        return shim_ZN7android17AudioStreamOutANM7doWriteEPKvji(OutANM, a1, a2, a3);
+                int doWrite(struct AudioStreamOutANM *outANM, void const* buf, unsigned int bytes, int offset) {
+				  //ALOGE("%s: offset=%d", __func__, offset);
+				  int v6; // r11@1
+				  unsigned int result; // r0@2
+				  size_t chunkSize; // r7@5
+				  void *v9; // r5@7
+				  int rc1; // r0@7
+				  int v11; // r3@8
+				  int v12; // r1@8
+				  const char *v13; // r2@8
+				  void *v14; // r1@9
+				  int rc2; // r10@9
+				  unsigned int consumedBytes; // r8@15
+				  void *admBufSharedMem; // [sp+Ch] [bp-34h]@16
+				  int v20; // [sp+14h] [bp-2Ch]@7
+				  
+				  int admBufSize;
+				  int *admCurBufIdxPtr;
+				  int admCurBufIdx;
+				  int ADMConnectionID;
+				  int admNumBufs;
+				  
+				  if (!offset) {
+						admBufSize = outANM->mAdmBufSize1;
+						admBufSharedMem = outANM->mAdmBufSharedMem1;
+						admCurBufIdxPtr = &outANM->mCurBufIdx1;
+						ADMConnectionID = outANM->mADMConnectionID1;
+						admNumBufs = outANM->mAdmNumBufs1;
+				  } else {
+						admBufSize = outANM->mAdmBufSize2;
+						admBufSharedMem = outANM->mAdmBufSharedMem2;
+						admCurBufIdxPtr = &outANM->mCurBufIdx2;
+						ADMConnectionID = outANM->mADMConnectionID2;
+						admNumBufs = outANM->mAdmNumBufs2;
+				  }
+				  /*
+				  chunkSize = admBufSize;
+				  memcpy(admBufSharedMem + admBufSize * admCurBufIdx,
+													  buf + consumedBytes, chunkSize);
+													  
+					rc1 = android::AudioStreamOutANM::getConnectionId(outANM, offset);
+						  if ( rc1 < 0 )
+						  {
+							ALOGE("%s: Failed to connect to ADM: %d", __func__, rc1);
+							//return 0x80000002;
+						  }
+						  
+					int newLpaMode = -1;
+						  
+					rc2 = ste_adm_client_send(ADMConnectionID, admCurBufIdx,
+																consumedBytes, &newLpaMode);
+																
+					ALOGE("%s: ste_adm_client_send returned %d newLpaMode=%d", __func__, rc2, newLpaMode);
+					
+					outANM->mCurBufIdx1 = (outANM->mCurBufIdx1 + 1) % outANM->mAdmNumBufs1;*/
+
+				  //v6 = (&outANM->unk1 + offset + 50);
+				  /*if ( bytes <= admBufSize )                     // bytes < mADMBufSize
+				  {
+					if ( admBufSharedMem )       // mAdmBufSharedMem{1,2}
+					{
+					  consumedBytes = 0;
+					  //admBufSharedMem = outANM + 4 * (offset + 52);// outANM->mADMBufSharedMem{1,2}
+					  while ( 1 )
+					  {
+						while ( 1 )
+						{
+						  if ( consumedBytes >= bytes )
+							return bytes;
+						  chunkSize = admBufSize;                // mAdmBufSize{1,2}
+						  if ( chunkSize > bytes - consumedBytes )
+						  {
+							chunkSize = bytes - consumedBytes;
+							ALOGI("%s: Short final write %d", __func__, bytes - consumedBytes);
+						  }
+						  //v9 = outANM + 4 * (offset + 54);
+						  admCurBufIdx = *admCurBufIdxPtr;
+						  memcpy(admBufSharedMem + admBufSize * admCurBufIdx,
+													  buf + consumedBytes, chunkSize);
+						  v20 = 0;
+						  rc1 = android::AudioStreamOutANM::getConnectionId(outANM, offset);
+						  if ( rc1 < 0 )
+						  {
+							ALOGE("%s: Failed to connect to ADM: %d", __func__, rc1);
+							return 0x80000002;
+						  }
+						  outANM->mCommandThread.unk842 = 1;
+						  //v14 = *(v9 + 1);
+						  int newLpaMode = 0;
+						  
+						  rc2 = ste_adm_client_send(ADMConnectionID, admCurBufIdx,
+																consumedBytes, &newLpaMode);
+
+						  outANM->mCommandThread.unk842 = 0;
+						  android::AudioHardwareANM::handleError(outANM->mANM, rc2, 3);
+						  if ( rc2 != -9 )
+							break;
+						  if ( android::AudioStreamOutANM::restore(outANM) )
+							return 0x80000002;
+						  ALOGI("%s: Reconnected to ADM server", __func__);
+						}
+						if ( rc2 )
+						  break;
+						consumedBytes += chunkSize;
+						*admCurBufIdxPtr = (*admCurBufIdxPtr + 1) % admNumBufs;
+					  }
+
+					  ALOGE("%s: Failed to send audio data to ADM: %d", __func__, rc2);
+					  return 0x80000002;
+					}
+					else
+					{
+					  ALOGE("%s: write - output buffer not yet allocated", __func__);
+					  result = -38;
+					}
+				  }
+				  else
+				  {
+					ALOGE("%s: Requested to write invalid amount of bytes! (%d, mAdmBufSize=%d)",
+					  __func__,
+					  bytes,
+					  admBufSize);
+					result = -22;
+				  }
+				  return result;
+				  */
+				  //shim_ZN7android17AudioStreamOutANM7doWriteEPKvji(outANM, buf, bytes, offset);
+                        return shim_ZN7android17AudioStreamOutANM7doWriteEPKvji(outANM, buf, bytes, offset);
                 }
                 int write(struct AudioStreamOutANM *outANM, const void *buf, unsigned int bytes) {
 				  int rc; // r3@1
@@ -230,6 +356,7 @@ namespace android {
 					{
 					  if ( !deviceList[deviceIdx].mIsVoip )
 					  {
+						// ALOGE("%s: %s offset = %d", __func__, deviceList[deviceIdx].mDeviceName, deviceList[deviceIdx].mIsVoip);
 						ret = android::AudioStreamOutANM::doWrite(outANM, buf, bytes, deviceList[deviceIdx].mIsVoip);
 						break;
 					  }
@@ -1069,4 +1196,3 @@ namespace android {
 		}
 	}
 }
-

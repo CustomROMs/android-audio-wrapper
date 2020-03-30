@@ -289,9 +289,12 @@ static ssize_t out_write(struct audio_stream_out *stream, const void* buffer,
 	
 	//ALOGE("%s: bytes = %d", __func__, bytes); 
 	
-	RETURN_WRAPPED_STREAM_OUT_CALL(stream, write, buffer, bytes);
+	//RETURN_WRAPPED_STREAM_OUT_CALL(stream, write, buffer, bytes);
 	
-	//return android::AudioStreamOutANM::write(outANM, buffer, bytes);
+	int ret = android::AudioStreamOutANM::write(outANM, buffer, bytes);
+	//ALOGE("%s: bytes = %d, ret = %d", __func__, bytes, ret); 
+	
+	return ret;
 }
 
 static int out_get_render_position(const struct audio_stream_out *stream,
