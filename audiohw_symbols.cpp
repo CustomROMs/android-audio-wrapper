@@ -168,7 +168,11 @@ namespace android {
                 int restore(struct AudioStreamOutANM *OutANM) {
                         return shim_ZN7android17AudioStreamOutANM7restoreEv(OutANM);
                 }
-                int doWrite(struct AudioStreamOutANM *outANM, void const* buf, unsigned int bytes, int offset) {
+				int MIN(int a, int b) {
+					return (a < b) ? a : b;
+				}
+				
+                int doWrite(struct AudioStreamOutANM *outANM, void const* buffer, unsigned int bytes, int offset) {
 				  //ALOGE("%s: offset=%d", __func__, offset);
 				  int v6; // r11@1
 				  unsigned int result; // r0@2
@@ -189,6 +193,10 @@ namespace android {
 				  int admCurBufIdx;
 				  int ADMConnectionID;
 				  int admNumBufs;
+				  int mCurBufOffset = 0;
+				  
+				   int err;
+				  unsigned int consumed_bytes = 0;
 				  
 				  if (!offset) {
 						admBufSize = outANM->mAdmBufSize1;
@@ -203,99 +211,48 @@ namespace android {
 						ADMConnectionID = outANM->mADMConnectionID2;
 						admNumBufs = outANM->mAdmNumBufs2;
 				  }
-				  /*
-				  chunkSize = admBufSize;
-				  memcpy(admBufSharedMem + admBufSize * admCurBufIdx,
-													  buf + consumedBytes, chunkSize);
-													  
-					rc1 = android::AudioStreamOutANM::getConnectionId(outANM, offset);
-						  if ( rc1 < 0 )
-						  {
-							ALOGE("%s: Failed to connect to ADM: %d", __func__, rc1);
-							//return 0x80000002;
-						  }
-						  
-					int newLpaMode = -1;
-						  
-					rc2 = ste_adm_client_send(ADMConnectionID, admCurBufIdx,
-																consumedBytes, &newLpaMode);
-																
-					ALOGE("%s: ste_adm_client_send returned %d newLpaMode=%d", __func__, rc2, newLpaMode);
-					
-					outANM->mCurBufIdx1 = (outANM->mCurBufIdx1 + 1) % outANM->mAdmNumBufs1;*/
+				  
+					if (bytes == 0 || bytes > (size_t) admBufSize) {
+						ALOGE("write(): Requested to write invalid amount of bytes! (%d, mAdmBufSize=%d)", bytes, admBufSize);
+						return BAD_VALUE;
+					}
 
-				  //v6 = (&outANM->unk1 + offset + 50);
-				  /*if ( bytes <= admBufSize )                     // bytes < mADMBufSize
-				  {
-					if ( admBufSharedMem )       // mAdmBufSharedMem{1,2}
-					{
-					  consumedBytes = 0;
-					  //admBufSharedMem = outANM + 4 * (offset + 52);// outANM->mADMBufSharedMem{1,2}
-					  while ( 1 )
-					  {
-						while ( 1 )
-						{
-						  if ( consumedBytes >= bytes )
-							return bytes;
-						  chunkSize = admBufSize;                // mAdmBufSize{1,2}
-						  if ( chunkSize > bytes - consumedBytes )
-						  {
-							chunkSize = bytes - consumedBytes;
-							ALOGI("%s: Short final write %d", __func__, bytes - consumedBytes);
-						  }
-						  //v9 = outANM + 4 * (offset + 54);
-						  admCurBufIdx = *admCurBufIdxPtr;
-						  memcpy(admBufSharedMem + admBufSize * admCurBufIdx,
-													  buf + consumedBytes, chunkSize);
-						  v20 = 0;
-						  rc1 = android::AudioStreamOutANM::getConnectionId(outANM, offset);
-						  if ( rc1 < 0 )
-						  {
-							ALOGE("%s: Failed to connect to ADM: %d", __func__, rc1);
-							return 0x80000002;
-						  }
-						  outANM->mCommandThread.unk842 = 1;
-						  //v14 = *(v9 + 1);
-						  int newLpaMode = 0;
-						  
-						  rc2 = ste_adm_client_send(ADMConnectionID, admCurBufIdx,
-																consumedBytes, &newLpaMode);
+					if (admBufSharedMem == NULL) {
+						ALOGE("write(): AudioStreamOutANM::write - output buffer not yet allocated");
+						return INVALID_OPERATION;
+					}
 
-						  outANM->mCommandThread.unk842 = 0;
-						  android::AudioHardwareANM::handleError(outANM->mANM, rc2, 3);
-						  if ( rc2 != -9 )
-							break;
-						  if ( android::AudioStreamOutANM::restore(outANM) )
-							return 0x80000002;
-						  ALOGI("%s: Reconnected to ADM server", __func__);
+				      while (consumed_bytes < bytes) {
+							int fillLength = admBufSize;
+
+							unsigned int transfer_bytes = MIN(MIN(fillLength, admBufSize - mCurBufOffset), bytes - consumed_bytes);
+
+							ALOGV("write(): Copy %d bytes to buffer (%d) 0x%08X at offset %d",
+										transfer_bytes, *admCurBufIdxPtr, (uint32_t) admBufSharedMem + (*admCurBufIdxPtr)*admBufSize, mCurBufOffset);
+							memcpy(admBufSharedMem + (*admCurBufIdxPtr)*admBufSize + mCurBufOffset,
+								   ((const char*) buffer) + consumed_bytes,
+								   transfer_bytes);
+							mCurBufOffset += transfer_bytes;
+
+							if (mCurBufOffset >= fillLength) {
+								int newLpaMode = 0;
+								err = ste_adm_client_send(ADMConnectionID, (*admCurBufIdxPtr), mCurBufOffset, &newLpaMode);
+								ALOGV("write(): Sent %d bytes to ADM", mCurBufOffset);
+
+								*admCurBufIdxPtr = (*admCurBufIdxPtr + 1) % admNumBufs;
+								mCurBufOffset = 0;
+
+								if (err != OK) {
+									ALOGE("write(): Failed to send audio data to ADM: %d", err);
+									return FAILED_TRANSACTION;
+								}
+							}
+							consumed_bytes += transfer_bytes;
 						}
-						if ( rc2 )
-						  break;
-						consumedBytes += chunkSize;
-						*admCurBufIdxPtr = (*admCurBufIdxPtr + 1) % admNumBufs;
-					  }
+						
+					ALOGV("write(): Completed\n");
 
-					  ALOGE("%s: Failed to send audio data to ADM: %d", __func__, rc2);
-					  return 0x80000002;
-					}
-					else
-					{
-					  ALOGE("%s: write - output buffer not yet allocated", __func__);
-					  result = -38;
-					}
-				  }
-				  else
-				  {
-					ALOGE("%s: Requested to write invalid amount of bytes! (%d, mAdmBufSize=%d)",
-					  __func__,
-					  bytes,
-					  admBufSize);
-					result = -22;
-				  }
-				  return result;
-				  */
-				  //shim_ZN7android17AudioStreamOutANM7doWriteEPKvji(outANM, buf, bytes, offset);
-                        return shim_ZN7android17AudioStreamOutANM7doWriteEPKvji(outANM, buf, bytes, offset);
+					return bytes;
                 }
                 int write(struct AudioStreamOutANM *outANM, const void *buf, unsigned int bytes) {
 				  int rc; // r3@1

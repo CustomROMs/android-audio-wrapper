@@ -412,8 +412,100 @@ ssize_t AudioStreamOutANM::write(const void *buffer, size_t bytes)
         return INVALID_OPERATION;
     }
 
+    if (mNewADMConnID > 0) {
+
+        pthread_mutex_lock(&mMutex);
+
+        /* Audio has been rerouted, switch to new connection */
+        ALOG_INFO("write(): Routing is changed. Old connection=%d, New connection=%d (this=%p)", mADMConnectionID, mNewADMConnID, this);
+        mOldADMConnID = mADMConnectionID;
+        mADMConnectionID = mNewADMConnID;
+        mNewADMConnID = -1;
+
+        munmap(mAdmBufSharedMem, mAdmBufSize * mAdmNumBufs);
+        mAdmBufSharedMem = mNewAdmBufSharedMem;
+        mAdmBufSize      = mNewAdmBufSize;
+        mAdmNumBufs      = mNewAdmNumBufs;
+        mCurBufIdx       = 0;
+
+
+        /* Refresh device list from new routing info */
+        refreshDeviceList(mDeviceList, mNewDevices);
+        mOldDevices = mDevices;
+        mDevices = mNewDevices;
+        mNewDevices = 0;
+
+        pthread_mutex_unlock(&mMutex);
+
+        /* Get new latency value */
+        mLatency = 0;
+        for (cviter it = mDeviceList.begin(); it != mDeviceList.end(); ++it) {
+            int latency;
+            int res = ste_adm_client_max_out_latency(*it, &latency);
+            if (res < 0) {
+                ALOG_WARN("write(): Failed to get latency for device %s,res = %d\n", *it, res);
+            } else {
+                ALOG_INFO("write(): Latency for device %s = %d\n", *it, latency);
+                if (latency > mLatency) {
+                    mLatency = latency;
+                }
+            }
+        }
+
+        /* Close old devices and connection */
+        pthread_t thread;
+        pthread_attr_t tattr;
+        pthread_attr_init(&tattr);
+        pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED);
+        if (pthread_create(&thread, &tattr, close_dev_thread, this)) {
+            ALOG_ERR("write(): pthread_create() failed\n");
+            return 0;
+        }
+    } else if (mNewDevices != 0) {
+        if (!mChangingDevice) {
+            ALOG_ERR("write(): Changing to new devices failed, connection %d (this=%p)", mADMConnectionID, this);
+
+            pthread_mutex_lock(&mMutex);
+
+            /* mNewDevices is not 0 and open_dev_thread is not running. This
+               means that changing to new devices failed in open_dev_thread */
+            ALOG_INFO("write(): mNewDevices = %d", mNewDevices);
+            /* Go to standby (drain and close devices) */
+            status_t status = this->standby_l();
+            if (status != NO_ERROR) {
+                ALOG_ERR("write(): Failed to go to standby mode, continue anyway\n");
+                mStandby = true;
+            }
+            ALOG_INFO("write(): Disconnect from ADM, ID = %d", mADMConnectionID);
+            ste_adm_client_disconnect(mADMConnectionID);
+            mDevices = mNewDevices;
+            /* Refresh device list with new devices */
+            refreshDeviceList(mDeviceList, mNewDevices);
+            mNewDevices = 0;
+            mADMConnectionID = ste_adm_client_connect();
+            ALOG_INFO("write(): Connect to ADM, ID = %d", mADMConnectionID);
+
+            pthread_mutex_unlock(&mMutex);
+        }
+    }
+
+    if (mStandbyPending) {
+        ALOG_INFO("write(): mStandbyPending TRUE, resetting\n");
+        mStandbyPending = false;
+    }
+
+    ALOG_INFO_FL("write(): %d bytes from buffer 0x%08X (this=%p)\n",
+        (int) bytes, (uint32_t) buffer, this);
+
+
     while (consumed_bytes < bytes) {
-        int fillLength = mAdmBufSize;
+        int fillLength;
+        if (mLpaMode == 0 && get_adm_format() < STE_ADM_FORMAT_FIRST_CODED) {
+            fillLength = bytes;
+        }
+        else {
+            fillLength = mAdmBufSize;
+        }
 
         unsigned int transfer_bytes = MIN(MIN(fillLength, mAdmBufSize - mCurBufOffset), bytes - consumed_bytes);
 
@@ -427,12 +519,89 @@ ssize_t AudioStreamOutANM::write(const void *buffer, size_t bytes)
         if (mCurBufOffset >= fillLength) {
             int newLpaMode = 0;
             err = ste_adm_client_send(mADMConnectionID, mCurBufIdx, mCurBufOffset, &newLpaMode);
-            ALOGE("write(): Sent %d bytes to ADM\n", mCurBufOffset);
+            if(mLpaMode != newLpaMode) {
+                ALOG_INFO("write(): LPA mode changed from %d to %d", mLpaMode, newLpaMode);
+                mLpaMode = newLpaMode;
+            }
+            ALOG_INFO_FL("write(): Sent %d bytes to ADM\n", mCurBufOffset);
 
             mCurBufIdx = (mCurBufIdx + 1) % mAdmNumBufs;
             mCurBufOffset = 0;
 
-            if (err != STE_ADM_RES_OK) {
+            if (err == STE_ADM_RES_ERR_MSG_IO) {
+
+                pthread_mutex_lock(&mMutex);
+
+                /* connection to ADM has been lost or other connection issues, possible ADM reboot
+                   try to re-initiate the connection */
+                /* try to close but igore error message if there are any */
+                int tmp_err;
+                for (cviter it = mDeviceList.begin(); it != mDeviceList.end(); ++it) {
+                    tmp_err = ste_adm_close_device(mADMConnectionID, *it);
+                    if (tmp_err != STE_ADM_RES_OK) {
+                        ALOG_WARN("write(): Lost connection to ADM, trying to close device returned error=%d fd=%d\n",
+                                  tmp_err, mADMConnectionID);
+                    }
+                }
+                /* disconnect ADM connection */
+                tmp_err = ste_adm_client_disconnect(mADMConnectionID);
+                mCurBufIdx = 0;
+                mCurBufOffset = 0;
+                if (tmp_err != STE_ADM_RES_OK) {
+                    ALOG_WARN("write(): Lost connection to ADM, trying to disconnect returned error=%d fd=%d\n",
+                              tmp_err, mADMConnectionID);
+                }
+                /* open new connection */
+                mADMConnectionID = ste_adm_client_connect();
+                if (mADMConnectionID < 0) {
+                    /* failed to re-connect */
+                    ALOG_ERR("write(): ste_adm_client_connect() failed in write");
+                    pthread_mutex_unlock(&mMutex);
+                    return FAILED_TRANSACTION;
+                }
+                ALOG_INFO("write(): Re-connected to ADM after lost connection, ID = %d", mADMConnectionID);
+
+                pthread_mutex_unlock(&mMutex);
+
+                /* Check call status and recover call graph if needed */
+                String8 keyValuePairs = android::AudioSystem::getParameters(0, String8(PARAM_KEY_AP_REF));
+                AudioParameter apParam = AudioParameter(keyValuePairs);
+                int ptr = 0;
+                if (apParam.getInt(String8(PARAM_KEY_AP_REF), ptr) == NO_ERROR) {
+                    //((AudioPolicyManagerANM*)ptr)->checkCallStatus();
+                }
+
+                pthread_mutex_lock(&mMutex);
+
+                /* re-open all new devices */
+                mAdmNumBufs = 3;
+                if (mNewDevices != 0) {
+                    if (!mChangingDevice) {
+                        /* mNewDevices is not 0 and open_dev_thread is not running.
+                           This means that changing to new devices failed in open_dev_thread */
+                        ALOG_INFO("write(): mNewDevices = %d", mNewDevices);
+                        mDevices = mNewDevices;
+                        /* Refresh device list from new routing info */
+                        refreshDeviceList(mDeviceList, mNewDevices);
+                        mNewDevices = 0;
+                    }
+                }
+
+                for (cviter it = mDeviceList.begin(); it != mDeviceList.end(); ++it) {
+                    tmp_err = ste_adm_client_open_device(mADMConnectionID, *it,
+                    sampleRate(), get_adm_format(), NULL,
+                        &mAdmBufSharedMem, mAdmBufSize, mAdmNumBufs);
+                    if (tmp_err != STE_ADM_RES_OK) {
+                        ALOG_ERR("write(): Re-connect to ADM, failed to open device %s, err=%d\n", *it, tmp_err);
+                    }
+                }
+
+                pthread_mutex_unlock(&mMutex);
+
+                /* re-connected and re-opened devices to ADM */
+                ALOG_INFO("write(): Reconnected to ADM server, new fd=%d\n", mADMConnectionID);
+                continue;
+            } else if (err != STE_ADM_RES_OK) {
                 ALOG_ERR("write(): Failed to send audio data to ADM: %d\n", err);
                 return FAILED_TRANSACTION;
             }

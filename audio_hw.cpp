@@ -439,13 +439,59 @@ static int adev_open_output_stream(struct audio_hw_device *dev,
                               struct audio_stream_out **stream_out,
 			      const char *address __unused)
 {
-    return gDevice->open_output_stream(gDevice, handle, devices, flags, config, stream_out, address);
+    struct wrapper_stream_out *out;
+	struct AudioStreamOutANM * OutANM;
+    int ret;
+    ALOGI("%s: devices 0x%x", __FUNCTION__, devices);
+	
+    out = (struct wrapper_stream_out *)calloc(1, sizeof(struct wrapper_stream_out));
+    if (!out)
+        return -ENOMEM;
+
+    struct wrapper_audio_device* our_dev = reinterpret_cast<struct wrapper_audio_device*>(dev);
+
+
+    ret = WRAPPED_DEVICE(dev)->open_output_stream(WRAPPED_DEVICE(dev), handle, devices, flags,
+                              config, &WRAPPED_STREAM_OUT(out));
+
+    if(ret < 0)
+        goto err_open;
+	
+	OutANM = toOutANM((struct audio_stream*)out);
+	ALOGE("%s: sampleRate = %d, format = %d, channel_mask=%p, conn id=%d, mAdmNumBufs1=%d, mAdmBufSize1=%d, mAdmBufSharedMem1=%d", __func__, OutANM->mSampleRate, OutANM->mFormat, OutANM->mChannels, OutANM->mADMConnectionID1, OutANM->mAdmNumBufs1, OutANM->mAdmBufSize1, OutANM->mAdmBufSharedMem1);
+
+    out->stream.common.get_sample_rate = out_get_sample_rate;
+    out->stream.common.set_sample_rate = out_set_sample_rate;
+    out->stream.common.get_buffer_size = out_get_buffer_size;
+    out->stream.common.get_channels = out_get_channels;
+    out->stream.common.get_format = out_get_format;
+    out->stream.common.set_format = out_set_format;
+    out->stream.common.standby = out_standby;
+    out->stream.common.dump = out_dump;
+    out->stream.common.set_parameters = out_set_parameters;
+    out->stream.common.get_parameters = out_get_parameters;
+    out->stream.common.add_audio_effect = out_add_audio_effect;
+    out->stream.common.remove_audio_effect = out_remove_audio_effect;
+    out->stream.get_latency = out_get_latency;
+    out->stream.set_volume = out_set_volume;
+    out->stream.write = out_write;
+    out->stream.get_render_position = out_get_render_position;
+    out->stream.get_next_write_timestamp = NULL; //out_get_next_write_timestamp;
+
+    *stream_out = &out->stream;
+    return 0;
+
+err_open:
+    free(out);
+    *stream_out = NULL;
+    return ret;
 }
 
 static void adev_close_output_stream(struct audio_hw_device *dev,
                                      struct audio_stream_out *stream)
 {
-    gDevice->close_output_stream(gDevice, stream);
+    WRAPPED_DEVICE_CALL(dev, close_output_stream, WRAPPED_STREAM_OUT(stream));
+    free(stream);
 }
 
 static int adev_set_parameters(struct audio_hw_device *dev, const char *kvpairs)
