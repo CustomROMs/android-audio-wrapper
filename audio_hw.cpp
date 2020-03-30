@@ -215,22 +215,29 @@ static int out_set_sample_rate(struct audio_stream *stream, uint32_t rate)
 
 static size_t out_get_buffer_size(const struct audio_stream *stream)
 {
-    RETURN_WRAPPED_STREAM_OUT_COMMON_CALL(stream, get_buffer_size);
+	struct AudioStreamOutANM *outANM = toOutANMc(stream);
+
+	//RETURN_WRAPPED_STREAM_OUT_COMMON_CALL(stream, get_buffer_size);
+	return android::AudioStreamOutANM::bufferSize(outANM);
 }
 
 static audio_channel_mask_t out_get_channels(const struct audio_stream *stream)
 {
-    RETURN_WRAPPED_STREAM_OUT_COMMON_CALL(stream, get_channels);
+    struct AudioStreamOutANM *outANM = toOutANMc(stream);
+
+	return outANM->mChannels;
 }
 
 static audio_format_t out_get_format(const struct audio_stream *stream)
 {
-    RETURN_WRAPPED_STREAM_OUT_COMMON_CALL(stream, get_format);
+    struct AudioStreamOutANM *outANM = toOutANMc(stream);
+
+	return outANM->mFormat;
 }
 
 static int out_set_format(struct audio_stream *stream, audio_format_t format)
 {
-    RETURN_WRAPPED_STREAM_OUT_COMMON_CALL(stream, set_format, format);
+    return 0;
 }
 
 static int out_standby(struct audio_stream *stream)
@@ -240,7 +247,7 @@ static int out_standby(struct audio_stream *stream)
 
 static int out_dump(const struct audio_stream *stream, int fd)
 {
-    RETURN_WRAPPED_STREAM_OUT_COMMON_CALL(stream, dump, fd);
+    return 0;
 }
 
 static int out_set_parameters(struct audio_stream *stream, const char *kvpairs)
@@ -264,19 +271,27 @@ static char * out_get_parameters(const struct audio_stream *stream, const char *
 
 static uint32_t out_get_latency(const struct audio_stream_out *stream)
 {
-    RETURN_WRAPPED_STREAM_OUT_CALL(stream, get_latency);
+    struct AudioStreamOutANM *outANM = toOutANM((struct audio_stream*)stream);
+
+	return outANM->mLatency;
 }
 
 static int out_set_volume(struct audio_stream_out *stream, float left,
                           float right)
 {
-    RETURN_WRAPPED_STREAM_OUT_CALL(stream, set_volume, left, right);
+    return 0;
 }
 
 static ssize_t out_write(struct audio_stream_out *stream, const void* buffer,
                          size_t bytes)
 {
-    RETURN_WRAPPED_STREAM_OUT_CALL(stream, write, buffer, bytes);
+    struct AudioStreamOutANM *outANM = toOutANM((struct audio_stream*)stream);
+	
+	//ALOGE("%s: bytes = %d", __func__, bytes); 
+	
+	RETURN_WRAPPED_STREAM_OUT_CALL(stream, write, buffer, bytes);
+	
+	//return android::AudioStreamOutANM::write(outANM, buffer, bytes);
 }
 
 static int out_get_render_position(const struct audio_stream_out *stream,

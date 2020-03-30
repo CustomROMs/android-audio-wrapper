@@ -93,8 +93,17 @@ namespace android {
                 int latency(struct AudioStreamOutANM *OutANM) {
                         return shim_ZNK7android17AudioStreamOutANM7latencyEv(OutANM);
                 }
-                int bufferSize(struct AudioStreamOutANM *OutANM) {
-                        return shim_ZNK7android17AudioStreamOutANM10bufferSizeEv(OutANM);
+                int bufferSize(struct AudioStreamOutANM *outANM) {
+                    unsigned int size = 4096; // power of two --> should meet granularity requirements easily
+					unsigned int channels = popcount(outANM->mChannels);
+					if (outANM->mSampleRate != 0 && channels != 0) {
+						size = 32 * channels + channels* 2 * (22 * outANM->mSampleRate / 1000)-32;
+					    size -= size % 32;
+					}
+					ALOGI("bufferSize(): %d bytes (%d, %d), %d Hz\n",
+						size * NUMBER_OF_BUFFERS_PER_WRITE,
+						size, NUMBER_OF_BUFFERS_PER_WRITE, outANM->mSampleRate);
+					return size * NUMBER_OF_BUFFERS_PER_WRITE;
                 }
                 int reconnect_adm(struct AudioStreamOutANM *OutANM) {
                         return shim_ZN7android17AudioStreamOutANM13reconnect_admEv(OutANM);
@@ -162,8 +171,78 @@ namespace android {
                 int doWrite(struct AudioStreamOutANM *OutANM, void const* a1, unsigned int a2, int a3) {
                         return shim_ZN7android17AudioStreamOutANM7doWriteEPKvji(OutANM, a1, a2, a3);
                 }
-                int write(struct AudioStreamOutANM *OutANM, void const* a1, unsigned int a2) {
-                        return shim_ZN7android17AudioStreamOutANM5writeEPKvj(OutANM, a1, a2);
+                int write(struct AudioStreamOutANM *outANM, const void *buf, unsigned int bytes) {
+				  int rc; // r3@1
+				  unsigned int ret; // r8@2
+				  int v9; // r1@5
+				  char *v10; // r8@6
+				  unsigned int i; // r3@9
+				  int v12; // r1@10
+				  unsigned int v13; // lr@10
+				  int j; // r3@12
+				  int deviceIdx; // r2@18
+				  DeviceList *deviceList; // r1@18
+
+				  pthread_mutex_lock(&outANM->mMutex);
+				  rc = android::AudioStreamOutANM::openDevices(outANM);
+				  if (rc)
+				  {
+					ret = 0;
+					ALOGI("%s: write: openDevices failed: %d", __func__, rc);
+				  }
+				  else if ( bytes )
+				  {
+					/*v9 = 0;
+					while ( rc < outANM->mDeviceListSize )
+					{
+					  v10 = &outANM->mDeviceList[rc++];
+					  v9 |= *(v10 + 2);
+					}
+					android::HalAudioProcessing::processOutput(&outANM->mANM->unk_idx1, v9, buf, bytes);
+					if ( outANM->unk671 )
+					{
+					  for ( i = 0; i < bytes >> 2; i = (i + 1) )
+					  {
+						v12 = 4 * i + 2;
+						v13 = *(buf + 2 * i) + *(buf + v12);
+						*(buf + v12) = v13 >> 1;
+						*(buf + 2 * i) = v13 >> 1;
+					  }
+					}*/
+					bool hasVoipDev = true;
+					for ( j = 0; ; ++j )
+					{
+					  if ( j >= outANM->mDeviceListSize )
+					  {
+						ret = bytes;
+						hasVoipDev = false;
+						break;
+					  }
+					  if ( outANM->mDeviceList[j].mIsVoip )
+						break;
+					}
+					if (hasVoipDev)
+						ret = android::AudioStreamOutANM::doWrite(outANM, buf, bytes, 1);
+
+					deviceIdx = 0;
+					deviceList = outANM->mDeviceList;
+					while ( deviceIdx < outANM->mDeviceListSize )
+					{
+					  if ( !deviceList[deviceIdx].mIsVoip )
+					  {
+						ret = android::AudioStreamOutANM::doWrite(outANM, buf, bytes, deviceList[deviceIdx].mIsVoip);
+						break;
+					  }
+					  ++deviceIdx;
+					}
+				  }
+				  else
+				  {
+					ret = -22;
+					ALOGI("%s: Requested to write 0 bytes!", __func__);
+				  }
+				  pthread_mutex_unlock(&outANM->mMutex);
+				  return ret;
                 }
                 int start(struct AudioStreamOutANM *OutANM) {
                         return shim_ZN7android17AudioStreamOutANM13CommandThread5startEv(OutANM);

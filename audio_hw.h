@@ -20,6 +20,43 @@
 #define DEFAULT_IN_SAMPLE_RATE (8000)
 #define DEFAULT_OUT_SAMPLING_RATE 44100
 
+
+/**
+* The buffer size provided to Android must be an integer multiple of
+* this number of samples. If this criteria is not met, Android (Gingerbread)
+* stops sending buffers, and fails to call ANM::standby().
+* In stereo mode, it fails if the largest power-of-2 factor of the buffer size
+* is 32 or less, and the problem has not been reproduced if it is 64 or more.
+* This means a granularity of 16 samples (2 channels, 2 bytes per sample)
+* is needed.
+*
+* Buffer sizes tested:
+*  NOK: 5644 bytes (factors 2 2 17 83)             (multiple of 4)
+*  NOK: 5664 bytes (factors 2 2 2 2 2 3 59)        (multiple of 32)
+*  OK:  5696 bytes (factors 2 2 2 2 2 2 89)        (multiple of 64)
+*  OK:  5632 bytes (factors 2 2 2 2 2 2 2 2 2 11)  (multiple of 512)
+*/
+
+#ifndef BUFFER_GRANULARITY_IN_SAMPLES
+#define BUFFER_GRANULARITY_IN_SAMPLES (16)
+#endif
+
+
+/**
+* Buffer duration in ms, to be used to AudioFlinger
+*/
+#ifndef AUDIO_FLINGER_BUFFER_DURATION
+#define AUDIO_FLINGER_BUFFER_DURATION (16)
+#endif
+
+
+/**
+* Number of buffers per write to ADM
+*/
+#ifndef NUMBER_OF_BUFFERS_PER_WRITE
+#define NUMBER_OF_BUFFERS_PER_WRITE (1)
+#endif
+
 //#include <utils/KeyedVector.h>
 
 #include <pthread.h>
@@ -124,6 +161,17 @@ struct audio_hw_device_sec
   struct AudioHardwareANM *mANM;
 };
 
+struct __attribute__((aligned(4))) DeviceList
+{
+  int mDeviceName;
+  int mDeviceRefName;
+  int mDeviceBit;
+  bool mIsVoip;
+  bool unk4;
+  bool unk5;
+  bool unk6;
+};
+
 struct __attribute__((aligned(4))) CommandThread
 {
   int unk83;
@@ -162,22 +210,7 @@ struct __attribute__((aligned(4))) AudioStreamOutANM
   struct AudioHardwareANM *mANM;
   int mADMConnectionID1;
   int mADMConnectionID2;
-  int unk4;
-  int unk5;
-  int unk6;
-  int unk7;
-  int unk8;
-  int unk9;
-  int unk10;
-  int unk11;
-  int unk12;
-  int unk13;
-  int unk14;
-  int unk15;
-  int unk16;
-  int unk17;
-  int unk18;
-  int unk19;
+  struct DeviceList mDeviceList[4];
   bool unk201;
   bool unk202;
   bool unk203;
@@ -205,26 +238,23 @@ struct __attribute__((aligned(4))) AudioStreamOutANM
   int unk41;
   int unk42;
   int unk43;
-  bool mDeviceListSize;
-  bool unk205;
-  bool unk206;
-  bool unk207;
+  int mDeviceListSize;
   bool mStandby;
   bool unk452;
   bool unk453;
   bool unk454;
   int mChannels;
   int mSampleRate;
-  int mFormat;
+  audio_format_t mFormat;
   int mAdmNumBufs1;
   int mAdmNumBufs2;
   int mAdmBufSize1;
   int mAdmBufSize2;
-  int mAdmBufSharedMem1;
-  int mAdmBufSharedMem2;
+  void *mAdmBufSharedMem1;
+  void *mAdmBufSharedMem2;
   int mCurBufIdx1;
   int mCurBufIdx2;
-  int mMutex;
+  pthread_mutex_t mMutex;
   int unk59;
   int unk60;
   int mDevices;
@@ -252,7 +282,7 @@ struct __attribute__((aligned(4))) AudioStreamOutANM
   int unk77;
   int unk78;
   int unk79;
-  int mMutex2;
+  pthread_mutex_t mMutex2;
   int unk81;
   int unk82;
   struct CommandThread mCommandThread;

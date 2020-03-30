@@ -66,6 +66,12 @@ int main() {
 	mOutputs.add(2, NULL);
 	printf("%s: mOutputs.size() = %d\n", __func__, mOutputs.size());
 
+	int test1 = 5;
+	int *testptr = &test1;
+
+	*testptr = 4;
+	printf("%d\n", *testptr);
+
 	delete gOutputs;
 
 	//printf("%x\n", 2);
