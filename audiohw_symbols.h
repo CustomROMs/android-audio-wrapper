@@ -278,7 +278,7 @@ int (*shim_ZN7android17AudioStreamOutANM10willChangeEij19audio_stream_type_tRbS2
 int (*shim_ZN7android17AudioStreamOutANM15getConnectionIdEi)(struct AudioStreamOutANM *OutANM, int a1);
 
 #ifdef __cplusplus
-int (*shim_ZN7android17AudioStreamOutANM11closeDeviceEPNS_9DeviceMapE)(struct AudioStreamOutANM *OutANM, android::DeviceMap* a1);
+int (*shim_ZN7android17AudioStreamOutANM11closeDeviceEPNS_9DeviceMapE)(struct AudioStreamOutANM *OutANM, struct DeviceList* a1);
 int (*shim_ZN7android17AudioStreamOutANM12closeDevicesEPNS_10DeviceListE)(struct AudioStreamOutANM *OutANM, struct DeviceList* a1);
 #else
 int (*shim_ZN7android17AudioStreamOutANM11closeDeviceEPNS_9DeviceMapE)(struct AudioStreamOutANM *OutANM, int* a1);

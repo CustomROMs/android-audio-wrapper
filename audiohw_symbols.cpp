@@ -207,14 +207,71 @@ namespace android {
                 int getConnectionId(struct AudioStreamOutANM *OutANM, int a1) {
                         return shim_ZN7android17AudioStreamOutANM15getConnectionIdEi(OutANM, a1);
                 }
-                int closeDevice(struct AudioStreamOutANM *OutANM, android::DeviceMap* a1) {
+                int closeDevice(struct AudioStreamOutANM *OutANM, struct DeviceList* a1) {
                         return shim_ZN7android17AudioStreamOutANM11closeDeviceEPNS_9DeviceMapE(OutANM, a1);
                 }
-                int closeDevices(struct AudioStreamOutANM *OutANM, struct DeviceList* a1) {
-                        return shim_ZN7android17AudioStreamOutANM12closeDevicesEPNS_10DeviceListE(OutANM, a1);
+                int closeDevices(struct AudioStreamOutANM *outANM, struct DeviceList* deviceList1) {
+					struct DeviceList *deviceList = deviceList1;
+			       	if (!deviceList1)
+                        deviceList = outANM->mDeviceList;
+					
+					int deviceIdx;
+					int deviceListSize;
+					int rc;
+					  if (!outANM->mStandby)
+					  {
+						android::AudioStreamOutANM::preCloseDevice(outANM, deviceList);
+						while (1)
+						{
+						  deviceListSize = outANM->mDeviceListSize;
+						  rc = android::AudioStreamOutANM::closeDevice(outANM, &deviceList[deviceIdx]);
+						  ALOGE("%s: closeDevice %d / %d (%s) returned %d", __func__, deviceIdx, deviceListSize, deviceList[deviceIdx].mDeviceName, rc);
+
+						  if (rc == -19)
+						  {
+							break;
+						  }
+						  ++deviceIdx;
+						  if ( deviceIdx >= deviceListSize)
+							break;
+						}
+
+						for (int i = 0; i < outANM->mDeviceListSize; i++)
+						{
+						  ALOGE("%s: device[%d]: %s, isVoip=%d", __func__, i, deviceList[i].mDeviceName, deviceList[i].mIsVoip);
+						  if (!deviceList[i].mIsVoip)                  // ! isVoip
+						  {
+							munmap(outANM->mAdmBufSharedMem1, outANM->mAdmNumBufs1 * outANM->mAdmBufSize1);
+							outANM->mAdmBufSharedMem1 = NULL;
+							outANM->mAdmBufSize1 = 0;
+							outANM->mAdmNumBufs1 = 0;
+							break;
+						  }
+						}
+
+						for (int i = 0; i < outANM->mDeviceListSize; i++)
+						{
+						  if (deviceList[i].mIsVoip)                  // isVoip
+						  {
+							munmap(outANM->mAdmBufSharedMem2, outANM->mAdmNumBufs2 * outANM->mAdmBufSize2);
+							outANM->mAdmBufSharedMem2 = NULL;
+							outANM->mAdmBufSize2 = 0;
+							outANM->mAdmNumBufs2 = 0;
+							break;
+						  }
+						  i++;
+						}
+						outANM->mStandby = 1;
+					  }
+					  return 0;
+					  // return shim_ZN7android17AudioStreamOutANM12closeDevicesEPNS_10DeviceListE(outANM, deviceList1);
                 }
-                int standby(struct AudioStreamOutANM *OutANM) {
-                        return shim_ZN7android17AudioStreamOutANM7standbyEv(OutANM);
+                int standby(struct AudioStreamOutANM *outANM) {
+                    ALOGE("%s: standby() called", __func__);
+                    pthread_mutex_lock(&outANM->mMutex);
+                    android::AudioStreamOutANM::closeDevices(outANM, 0);
+                    pthread_mutex_unlock(&outANM->mMutex);
+                    return 0;
                 }
                 int openDevice(struct AudioStreamOutANM *OutANM, android::DeviceMap* a1, bool a2) {
                         return shim_ZN7android17AudioStreamOutANM10openDeviceEPNS_9DeviceMapEb(OutANM, a1, a2);

@@ -242,7 +242,8 @@ static int out_set_format(struct audio_stream *stream, audio_format_t format)
 
 static int out_standby(struct audio_stream *stream)
 {
-    RETURN_WRAPPED_STREAM_OUT_COMMON_CALL(stream, standby);
+	struct AudioStreamOutANM *outANM = toOutANMc(stream);
+    return android::AudioStreamOutANM::standby(outANM);
 }
 
 static int out_dump(const struct audio_stream *stream, int fd)
