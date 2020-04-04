@@ -124,8 +124,8 @@ struct __attribute__((aligned(4))) AudioHardwareANM
   int unk_idx2;
   int unk_idx3;
   /* Lists if output and input descriptors */
-  int mOutputs[5];
-  int mInputs[5];
+  KeyedVector<audio_io_handle_t, AudioOutputDescriptor *> mOutputs;
+  KeyedVector<audio_io_handle_t, AudioInputDescriptor *> mInputs;
 
   bool unk1;
   bool unk100;
