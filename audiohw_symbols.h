@@ -100,9 +100,9 @@ void (*shim_ZN7android16AudioHardwareANM11stopFmRadioEv)(struct AudioHardwareANM
 void (*shim_ZN7android16AudioHardwareANM12startFmRadioEv)(struct AudioHardwareANM *ANM);
 int (*shim_ZN7android16AudioHardwareANM14getOutputStateEv)(struct AudioHardwareANM *ANM);
 #ifdef __cplusplus
-void (*shim_ZN7android16AudioHardwareANM15openInputStreamE15audio_devices_tP12audio_configPi)(struct AudioHardwareANM *ANM, audio_devices_t a1, audio_config* a2, int* a3);
+struct AudioStreamInANM* (*shim_ZN7android16AudioHardwareANM15openInputStreamE15audio_devices_tP12audio_configPi)(struct AudioHardwareANM *ANM, audio_devices_t a1, audio_config* a2, int* a3);
 #else
-void (*shim_ZN7android16AudioHardwareANM15openInputStreamE15audio_devices_tP12audio_configPi)(struct AudioHardwareANM *ANM, int a1, int* a2, int* a3);
+struct AudioStreamInANM* (*shim_ZN7android16AudioHardwareANM15openInputStreamE15audio_devices_tP12audio_configPi)(struct AudioHardwareANM *ANM, int a1, int* a2, int* a3);
 #endif
 
 void (*shim_ZN7android16AudioHardwareANM27notifyOutputAboutNormalModeEv)(struct AudioHardwareANM *ANM);

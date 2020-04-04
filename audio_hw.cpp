@@ -151,18 +151,17 @@ enum {
 
 static inline struct AudioStreamInANM* toInANM(struct audio_stream *in) {
 	struct legacy_stream_in *lin;
-	lin = (struct legacy_stream_in *)WRAPPED_STREAM_IN(in);
-	struct AudioStreamInANM *inANM = (struct AudioStreamInANM*)lin->legacy_in;
+	lin = (struct legacy_stream_in *)in;
+	struct AudioStreamInANM *inANM = lin->legacy_in;
 	return inANM;
 }
 
 static inline struct AudioStreamInANM* toInANMc(const struct audio_stream *in) {
 	struct legacy_stream_in *lin;
-	lin = (struct legacy_stream_in *)WRAPPED_STREAM_IN(in);
-	struct AudioStreamInANM *inANM = (struct AudioStreamInANM*)lin->legacy_in;
+	lin = (struct legacy_stream_in *)in;
+	struct AudioStreamInANM *inANM = lin->legacy_in;
 	return inANM;
 }
-
 
 static uint32_t out_get_sample_rate(const struct audio_stream *stream)
 {
@@ -520,24 +519,29 @@ static int adev_open_input_stream(struct audio_hw_device *dev,
                                   const char *address __unused,
                                   audio_source_t source __unused)
 {
-    struct wrapper_stream_in *in;
+    struct legacy_stream_in *in;
+	struct AudioStreamInANM *inANM;
 
     int status;
     int ret;
 
     ALOGI("%s: devices 0x%x", __FUNCTION__, devices);
 
-    in = (struct wrapper_stream_in *)calloc(1, sizeof(struct wrapper_stream_in));
+    in = (struct legacy_stream_in *)calloc(1, sizeof(struct legacy_stream_in));
 
     if (!in)
         return -ENOMEM;
+	
+	int rc = 0;
 
-    ret = WRAPPED_DEVICE(dev)->open_input_stream(WRAPPED_DEVICE(dev), handle, devices, config,
-                              &WRAPPED_STREAM_IN(in), flags, address, source);
+	in->legacy_in = android::AudioHardwareANM::openInputStream(gANM, devices, config, &rc);
+	
+	if (rc) {
+		ALOGE("%s: error rc = %d", __func__, rc);
+		goto err_open;
+	}
 
-    ALOGE("%s: wrapped_stream = %p", __func__, WRAPPED_STREAM_IN(in));
-
-	struct AudioStreamInANM *inANM = toInANM((struct audio_stream*)in);
+	inANM = toInANM((struct audio_stream*)in);
 	ALOGE("%s: sampleRate = %d, format = %d, channel_mask=%p, conn id=%d, mAdmNumBufs=%d, mAdmBufSize=%d, mAdmBufSharedMem=%d", __func__, inANM->mSampleRate, inANM->mFormat, inANM->mChannels, inANM->mADMConnectionID, inANM->mAdmNumBufs, inANM->mAdmBufSize, inANM->mAdmBufSharedMem);
     if(ret < 0)
         goto err_open;

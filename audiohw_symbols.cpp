@@ -575,8 +575,9 @@ namespace android {
 		int getOutputState(struct AudioHardwareANM *ANM) {
 			return shim_ZN7android16AudioHardwareANM14getOutputStateEv(gANM);
 		}
-		void openInputStream(struct AudioHardwareANM *ANM, audio_devices_t a1, audio_config* a2, int* a3) {
-			shim_ZN7android16AudioHardwareANM15openInputStreamE15audio_devices_tP12audio_configPi(gANM, a1, a2, a3);
+
+		struct AudioStreamInANM* openInputStream(struct AudioHardwareANM *ANM, int devices, audio_config *config, int *status) {
+			return shim_ZN7android16AudioHardwareANM15openInputStreamE15audio_devices_tP12audio_configPi(gANM, devices, config, status);
 		}
 		void notifyOutputAboutNormalMode(struct AudioHardwareANM *ANM) {
 			shim_ZN7android16AudioHardwareANM27notifyOutputAboutNormalModeEv(gANM);
