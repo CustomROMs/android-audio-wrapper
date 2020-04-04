@@ -77,7 +77,7 @@ void (*shim_ZN7android16AudioHardwareANM13isExtraVolumeEv)(struct AudioHardwareA
 void (*shim_ZN7android16AudioHardwareANM9isHACModeEv)(struct AudioHardwareANM *ANM);
 void (*shim_ZN7android16AudioHardwareANM20getCurrentCallOutputEv)(struct AudioHardwareANM *ANM);
 void (*shim_ZN7android16AudioHardwareANM19getCurrentCallInputEv)(struct AudioHardwareANM *ANM);
-void (*shim_ZN7android16AudioHardwareANM14getActiveStateEi)(struct AudioHardwareANM *ANM, int a1);
+int (*shim_ZN7android16AudioHardwareANM14getActiveStateEi)(struct AudioHardwareANM *ANM, int a1);
 void (*shim_ZN7android16AudioHardwareANM4lockEv)(struct AudioHardwareANM *ANM);
 void (*shim_ZN7android16AudioHardwareANM6unlockEv)(struct AudioHardwareANM *ANM);
 int (*shim_ZN7android16AudioHardwareANM10setMicMuteEb)(struct AudioHardwareANM *ANM, bool a1);

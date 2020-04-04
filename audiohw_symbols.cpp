@@ -804,8 +804,8 @@ namespace android {
 		void getCurrentCallInput(struct AudioHardwareANM *ANM) {
 			shim_ZN7android16AudioHardwareANM19getCurrentCallInputEv(gANM);
 		}
-		void getActiveState(struct AudioHardwareANM *ANM, int a1) {
-			shim_ZN7android16AudioHardwareANM14getActiveStateEi(gANM, a1);
+		int getActiveState(struct AudioHardwareANM *ANM, int a1) {
+			return shim_ZN7android16AudioHardwareANM14getActiveStateEi(gANM, a1);
 		}
 		void lock(struct AudioHardwareANM *ANM) {
 			shim_ZN7android16AudioHardwareANM4lockEv(gANM);
@@ -861,11 +861,61 @@ namespace android {
 		void onRingback(struct AudioHardwareANM *ANM, bool a1) {
 			shim_ZN7android16AudioHardwareANM10onRingbackEb(gANM, a1);
 		}
-		void doUpdateState(struct AudioHardwareANM *ANM, int a1, bool a2) {
-			shim_ZN7android16AudioHardwareANM13doUpdateStateEib(gANM, a1, a2);
+		void doUpdateState(struct AudioHardwareANM *ANM, int csCallState1, bool force)
+		{
+		  int newActiveState; // r8@1
+		  signed int currActiveState; // r0@1
+		  int v9; // r0@7
+		  int i;
+		 
+		  ALOGI("%s: updateState 0x%x -> 0x%x", __func__, ANM->csCallState, csCallState1);
+		  newActiveState = android::AudioHardwareANM::getActiveState(ANM, csCallState1);
+		  currActiveState = android::AudioHardwareANM::getActiveState(ANM, ANM->csCallState);
+		  ANM->csCallState = csCallState1;
+		  if ( newActiveState != currActiveState || force )
+		  {
+			if ( currActiveState & 1 && newActiveState & 2 )
+			{
+			  v9 = 1;
+			}
+			else if ( newActiveState & 1 )
+			{
+			  v9 = (currActiveState >> 1) & 1;
+			}
+			else
+			{
+			  v9 = newActiveState & 1;
+			}
+			if ( force | v9 )
+			{
+			  i = 0;
+			  while ( i < gOutANMs->size() )
+			  {
+				android::AudioStreamOutANM::updateState(gOutANMs->itemAt(i), 0);
+				i++;
+			  }
+			}
+			i = 0;
+			while ( i < gOutANMs->size() )
+			{
+			  android::AudioStreamOutANM::updateState(gOutANMs->itemAt(i), newActiveState);
+			  i++;
+			}
+			ALOGV("updateState end");
+		  }
+		  else
+		  {
+			ALOGI("active state is the same: %d", newActiveState);
+		  }
 		}
-		void updateState(struct AudioHardwareANM *ANM, int a1) {
-			shim_ZN7android16AudioHardwareANM11updateStateEi(gANM, a1);
+		void updateState(struct AudioHardwareANM *ANM, int state)
+		{
+		  if ( ANM->csCallState != state )
+		  {
+			android::AudioHardwareANM::lock(ANM);
+			android::AudioHardwareANM::doUpdateState(ANM, state, false);
+			android::AudioHardwareANM::unlock(ANM);
+		  }
 		}
 		void stopVoIP(struct AudioHardwareANM *ANM) {
 			shim_ZN7android16AudioHardwareANM8stopVoIPEv(gANM);

@@ -30,17 +30,14 @@
 #include "common.h"
 #include "include/4.0/hardware/audio.h"
 
+#include <utils/KeyedVector.h>
+
 #include "audio_hw.h"
 //#include "audiohw_symbols.h"
 //#include <hardware/audio.h>
 
-
 #include <hardware/hardware.h>
 #include <system/audio.h>
-
-#include "audiohw_symbols.cpp"
-
-#include <utils/KeyedVector.h>
 
 using android::KeyedVector;
 using android::SortedVector;
@@ -56,7 +53,10 @@ struct AudioHardwareANM *gANM;
 
 SortedVector<struct AudioStreamInANM*> *gInputs;
 SortedVector<struct AudioStreamOutANM*> *gOutputs;
-KeyedVector<int, struct AudioStreamInANM*> *gInANMs;
+SortedVector<struct AudioStreamInANM*> *gInANMs;
+SortedVector<struct AudioStreamOutANM*> *gOutANMs;
+
+#include "audiohw_symbols.cpp"
 
 extern "C" {
 	int legacy_adev_open(const hw_module_t* module, const char* name,
@@ -459,6 +459,8 @@ static int adev_open_output_stream(struct audio_hw_device *dev,
         goto err_open;
 	
 	OutANM = toOutANM((struct audio_stream*)out);
+	gOutANMs->add(OutANM);
+
 	ALOGE("%s: sampleRate = %d, format = %d, channel_mask=%p, conn id=%d, mAdmNumBufs1=%d, mAdmBufSize1=%d, mAdmBufSharedMem1=%d", __func__, OutANM->mSampleRate, OutANM->mFormat, OutANM->mChannels, OutANM->mADMConnectionID1, OutANM->mAdmNumBufs1, OutANM->mAdmBufSize1, OutANM->mAdmBufSharedMem1);
 
     out->stream.common.get_sample_rate = out_get_sample_rate;
@@ -491,6 +493,15 @@ err_open:
 static void adev_close_output_stream(struct audio_hw_device *dev,
                                      struct audio_stream_out *stream)
 {
+	struct AudioStreamOutANM * OutANM = toOutANM((struct audio_stream*)stream);
+	ssize_t index = gOutANMs->indexOf(OutANM);
+    if (index < 0) {
+        ALOGE("closeOutputStream(): Unknown output stream %x\n",
+            (unsigned int)OutANM);
+    } else {
+        gOutANMs->removeAt(index);
+    }
+
     WRAPPED_DEVICE_CALL(dev, close_output_stream, WRAPPED_STREAM_OUT(stream));
     free(stream);
 }
@@ -606,6 +617,7 @@ static int adev_close(hw_device_t *dev)
 	gDevice->common.close((hw_device_t*)gDevice);
 	
 	delete gInANMs;
+	delete gOutANMs;
 
     return 0;
 }
@@ -635,7 +647,8 @@ static int adev_open(const hw_module_t* module, const char* name,
         return ret;
     }
 	
-	gInANMs = new KeyedVector<int, struct AudioStreamInANM*>;
+	gInANMs = new SortedVector<struct AudioStreamInANM*>;
+	gOutANMs = new SortedVector<struct AudioStreamOutANM*>;
 
     audio_hw_device_sec *legacy_device = (audio_hw_device_sec *)adev->wrapped_device;
     gANM = legacy_device->mANM;
