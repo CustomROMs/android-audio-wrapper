@@ -276,7 +276,10 @@ static int in_set_sample_rate(struct audio_stream *stream, uint32_t rate)
 
 static size_t in_get_buffer_size(const struct audio_stream *stream)
 {
-    RETURN_WRAPPED_STREAM_IN_COMMON_CALL(stream, get_buffer_size);
+	ALOGE("%s: ", __func__);
+	struct AudioStreamInANM *inANM = toInANMc(stream);
+	
+	return android::AudioHardwareANM::getInputBufferSize(gANM, inANM->mSampleRate, inANM->mFormat, inANM->mChannels);
 }
 
 static audio_channel_mask_t in_get_channels(const struct audio_stream *stream)
@@ -479,7 +482,7 @@ static int adev_get_mic_mute(const struct audio_hw_device *dev, bool *state)
 static size_t adev_get_input_buffer_size(const struct audio_hw_device *dev,
                                     const struct audio_config *config)
 {
-	return android::AudioHardwareANM::getInputBufferSize(gANM, config->sample_rate, config->format, config->channel_mask);
+	return android::AudioHardwareANM::getInputBufferSize(gANM, config->sample_rate, config->format, popcount(config->channel_mask));
 }
 
 

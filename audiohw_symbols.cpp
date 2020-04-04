@@ -179,8 +179,7 @@ namespace android {
 			return -ENOSYS;
 		}
 
-		int getInputBufferSize(struct AudioHardwareANM *ANM, unsigned int sampleRate, int format, int channelMask) {
-			int channelsCount = popcount(channelMask);
+		int getInputBufferSize(struct AudioHardwareANM *ANM, unsigned int sampleRate, int format, int channelsCount) {
 			size_t bufferSize = (40 * channelsCount * sampleRate) / 1000;
 			ALOGE("%s: channels count: %d, format: %d, sampleRate: %d, size=%d", __func__, channelsCount, format, sampleRate, bufferSize);
 
