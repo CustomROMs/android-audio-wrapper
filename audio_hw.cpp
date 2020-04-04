@@ -286,7 +286,9 @@ static size_t in_get_buffer_size(const struct audio_stream *stream)
 
 static audio_channel_mask_t in_get_channels(const struct audio_stream *stream)
 {
-    RETURN_WRAPPED_STREAM_IN_COMMON_CALL(stream, get_channels);
+	struct AudioStreamInANM *inANM = toInANMc(stream);
+
+	return inANM->mChannels;
 }
 
 static audio_format_t in_get_format(const struct audio_stream *stream)
