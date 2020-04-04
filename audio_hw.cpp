@@ -446,14 +446,6 @@ static int adev_set_master_volume(struct audio_hw_device *dev, float volume)
     return 0;
 }
 
-static int adev_get_master_mute(struct audio_hw_device *dev, bool *muted) {
-	return 0;
-}
-
-static int adev_set_master_mute(struct audio_hw_device *dev, bool muted) {
-	return 0;
-}
-
 static int adev_set_mode(struct audio_hw_device *dev, audio_mode_t mode)
 {
     return android::AudioHardwareANM1::setMode(gANM, mode);
@@ -461,13 +453,13 @@ static int adev_set_mode(struct audio_hw_device *dev, audio_mode_t mode)
 
 static int adev_set_mic_mute(struct audio_hw_device *dev, bool state)
 {
-    return android::AudioHardwareANM1::setMicMute(gANM, state);
+    RETURN_WRAPPED_DEVICE_CALL(dev, set_mic_mute, state);
 }
 
 static int adev_get_mic_mute(const struct audio_hw_device *dev, bool *state)
 {
 	*state = gANM->mIsMicMuted;
-	return 0;
+    return 0;
 }
 
 static size_t adev_get_input_buffer_size(const struct audio_hw_device *dev,
@@ -491,6 +483,7 @@ static int adev_open_input_stream(struct audio_hw_device *dev,
                                   audio_source_t source __unused)
 {
     struct wrapper_stream_in *in;
+    struct legacy_stream_in *lin;
     int status;
     int ret;
 
@@ -548,13 +541,10 @@ static int adev_dump(const audio_hw_device_t *dev, int fd)
 static int adev_close(hw_device_t *dev)
 {
     ALOGI("%s", __FUNCTION__);
-	if (gANM)
-		gANM->destructor();
+    WRAPPED_DEVICE(dev)->common.close((hw_device_t*)&(WRAPPED_DEVICE(dev)));
     free(dev);
     return 0;
 }
-
-//extern void (*_ZN7android16AudioHardwareANM13muteAllSoundsEv)(void);
 
 static int adev_open(const hw_module_t* module, const char* name,
                      hw_device_t** device)
@@ -563,7 +553,6 @@ static int adev_open(const hw_module_t* module, const char* name,
     int ret;
 
     ALOGI("Wrapping vendor audio primary");
-    //_ZN7android16AudioHardwareANM13muteAllSoundsEv();
 
     if (strcmp(name, AUDIO_HARDWARE_INTERFACE) != 0)
         return -EINVAL;
@@ -596,9 +585,9 @@ static int adev_open(const hw_module_t* module, const char* name,
     adev->device.init_check = adev_init_check;
     adev->device.set_voice_volume = adev_set_voice_volume;
     adev->device.set_master_volume = adev_set_master_volume;
-    adev->device.get_master_volume = adev_get_master_volume;
-    adev->device.set_master_mute = adev_set_master_mute;
-    adev->device.get_master_mute = adev_get_master_mute;
+    adev->device.get_master_volume = NULL; //adev_get_master_volume;
+    adev->device.set_master_mute = NULL; //adev_set_master_mute;
+    adev->device.get_master_mute = NULL; //adev_get_master_mute;
     adev->device.set_mode = adev_set_mode;
     adev->device.set_mic_mute = adev_set_mic_mute;
     adev->device.get_mic_mute = adev_get_mic_mute;
