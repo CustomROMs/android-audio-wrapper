@@ -319,22 +319,23 @@ static int in_dump(const struct audio_stream *stream, int fd)
 
 static int in_set_parameters(struct audio_stream *stream, const char *kvpairs)
 {
-    ALOGI("%s: kvpairs: %s", __FUNCTION__, kvpairs);
-    int ret;
-    char * fixed_kvpairs = fixup_audio_parameters(kvpairs, JB_TO_ICS);
-    ret = WRAPPED_STREAM_IN_COMMON_CALL(stream, set_parameters, fixed_kvpairs);
-    free(fixed_kvpairs);
-    return ret;
+    ALOGE("%s: ", __func__);
+	
+	struct AudioStreamInANM *inANM = toInANMc(stream);
+	
+	String8 params(kvpairs);
+	return android::AudioStreamInANM::setParameters(inANM, params);
 }
 
-static char * in_get_parameters(const struct audio_stream *stream,
+static char *in_get_parameters(const struct audio_stream *stream,
                                 const char *keys)
 {
-    ALOGI("%s: keys: %s", __FUNCTION__, keys);
-    char * kvpairs = WRAPPED_STREAM_IN_COMMON_CALL(stream, get_parameters, keys);
-    char * fixed_kvpairs = fixup_audio_parameters(kvpairs, ICS_TO_JB);
-    free(kvpairs);
-    return fixed_kvpairs;
+    ALOGE("%s: ", __func__);
+	
+	struct AudioStreamInANM *inANM = toInANMc(stream);
+	
+	String8 s(keys);
+	return android::AudioStreamInANM::getParameters(inANM, s);
 }
 
 static int in_set_gain(struct audio_stream_in *stream, float gain)
