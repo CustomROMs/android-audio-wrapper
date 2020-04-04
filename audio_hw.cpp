@@ -40,6 +40,13 @@
 #include <hardware_legacy/AudioHardwareInterface.h>
 #include <hardware_legacy/AudioSystemLegacy.h>
 
+extern "C" void *gHandle;
+
+struct AudioHardwareANM *gANM;
+
+void (*shim__ZN7android16AudioHardwareANM13muteAllSoundsEv)(struct AudioHardwareANM *mANM);
+void *(*shim__ZN7android16AudioHardwareANM15openInputStreamE15audio_devices_tP12audio_configPi)(struct AudioHardwareANM *mANM, audio_devices_t devices, audio_config* config, int* status);
+
 struct wrapper_audio_device {
     struct audio_hw_device device;
     struct wrapper::audio_hw_device *wrapped_device;
@@ -235,9 +242,6 @@ static uint32_t in_get_sample_rate(const struct audio_stream *stream)
     const struct legacy_stream_in *in =
         reinterpret_cast<const struct legacy_stream_in *>(stream);
 
-    for (int i=0; i < 2000; i+=sizeof(int)) {
-       ALOGE("%s: mem = %p?", __func__, *(int*)(in->legacy_in + i));
-    }
     //return in->legacy_in->mSampleRate;
 
     return DEFAULT_IN_SAMPLE_RATE;
@@ -456,23 +460,26 @@ static int adev_open_input_stream(struct audio_hw_device *dev,
                                   audio_source_t source __unused)
 {
     struct wrapper_stream_in *in;
+    struct legacy_stream_in *lin;
+    int status;
     int ret;
 
     ALOGI("%s: devices 0x%x", __FUNCTION__, devices);
 
+    lin = (struct legacy_stream_in *)calloc(1, sizeof(*in));
+    if (!lin)
+        return -ENOMEM;
+
     in = (struct wrapper_stream_in *)calloc(1, sizeof(struct wrapper_stream_in));
+
     if (!in)
         return -ENOMEM;
 
-    int (*open_input_stream)(struct audio_hw_device *dev,
-                             audio_io_handle_t handle,
-                             audio_devices_t devices,
-                             struct audio_config *config,
-                             struct audio_stream_in **stream_in,
-                             audio_input_flags_t flags,
-                             const char *address,
-                             audio_source_t source);
 
+    //struct AudioStreamInANM *(*shim__ZN7android16AudioHardwareANM15openInputStreamE15audio_devices_tP12audio_configPi)(audio_devices_t devices, audio_config* config, status_t* status)
+    lin->legacy_in = (struct AudioStreamInANM*)shim__ZN7android16AudioHardwareANM15openInputStreamE15audio_devices_tP12audio_configPi(gANM, devices, config, &status);
+
+    //WRAPPED_STREAM_IN(in) = (struct wrapper::audio_stream_in *)lin;
 
     ret = WRAPPED_DEVICE(dev)->open_input_stream(WRAPPED_DEVICE(dev), handle, devices, config,
                               &WRAPPED_STREAM_IN(in), flags, address, source);
@@ -526,10 +533,6 @@ static int adev_close(hw_device_t *dev)
     return 0;
 }
 
-void (*shim__ZN7android16AudioHardwareANM13muteAllSoundsEv)(struct AudioHardwareANM *mANM);
-
-extern "C" void *gHandle;
-
 static int adev_open(const hw_module_t* module, const char* name,
                      hw_device_t** device)
 {
@@ -554,19 +557,28 @@ static int adev_open(const hw_module_t* module, const char* name,
     }
 
     audio_hw_device_sec *legacy_device = (audio_hw_device_sec *)adev->wrapped_device;
-    struct AudioHardwareANM *mANM = legacy_device->mANM;
-    ALOGE("%s: mIsMono: %d, mFormat: %d, mTtyMode: %d, mChannelMask: %d", __func__, mANM->mIsMono, mANM->mFormat, mANM->mTtyMode, mANM->mChannelMask);
+    gANM = legacy_device->mANM;
+    ALOGE("%s: mIsMono: %d, mFormat: %d, mTtyMode: %d, mChannelMask: %d", __func__, gANM->mIsMono, gANM->mFormat, gANM->mTtyMode, gANM->mChannelMask);
     //_ZN7android16AudioHardwareANM13muteAllSoundsEv
 
-    if (gHandle)
-       shim__ZN7android16AudioHardwareANM13muteAllSoundsEv = (void(*)(struct AudioHardwareANM *mANM))dlsym(gHandle, "_ZN7android16AudioHardwareANM13muteAllSoundsEv");
-    else
+    if (gHandle) {
+       shim__ZN7android16AudioHardwareANM13muteAllSoundsEv = (void(*)(struct AudioHardwareANM *gANM))dlsym(gHandle, "_ZN7android16AudioHardwareANM13muteAllSoundsEv");
+       shim__ZN7android16AudioHardwareANM15openInputStreamE15audio_devices_tP12audio_configPi =
+         (void* (*)(AudioHardwareANM*, unsigned int, audio_config*, int*))
+         dlsym(gHandle, "_ZN7android16AudioHardwareANM15openInputStreamE15audio_devices_tP12audio_configPi");
+       /*shim__ZN7android16AudioHardwareANM15openInputStreamE15audio_devices_tP12audio_configPi =
+                         (void* (*)(struct AudioHardwareANM*, audio_devices_t, audio_config*, status_t))
+                           dlsym(gHandle, "_ZN7android16AudioHardwareANM15openInputStreamE15audio_devices_tP12audio_configPi");*/
+    } else
        ALOGE("%s: handle is not valid!", __func__);
 
     if (shim__ZN7android16AudioHardwareANM13muteAllSoundsEv) {
-       shim__ZN7android16AudioHardwareANM13muteAllSoundsEv(mANM);
+       shim__ZN7android16AudioHardwareANM13muteAllSoundsEv(gANM);
     } else
-       ALOGE("%s: couldn't fidn _ZN7android16AudioHardwareANM13muteAllSoundsEv symbol!", __func__);
+       ALOGE("%s: couldn't find _ZN7android16AudioHardwareANM13muteAllSoundsEv symbol!", __func__);
+
+    if (!shim__ZN7android16AudioHardwareANM15openInputStreamE15audio_devices_tP12audio_configPi)
+       ALOGE("%s: couldn't find shim__ZN7android16AudioHardwareANM15openInputStreamE15audio_devices_tP12audio_configPi symbol!", __func__);
 
     adev->device.common.tag = HARDWARE_DEVICE_TAG;
     adev->device.common.version = AUDIO_DEVICE_API_VERSION_2_0;
