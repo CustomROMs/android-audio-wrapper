@@ -519,30 +519,27 @@ static int adev_open_input_stream(struct audio_hw_device *dev,
                                   const char *address __unused,
                                   audio_source_t source __unused)
 {
-    struct legacy_stream_in *in;
-	struct AudioStreamInANM *inANM;
-
-    int status;
+    struct wrapper_stream_in *in;
     int ret;
 
     ALOGI("%s: devices 0x%x", __FUNCTION__, devices);
 
-    in = (struct legacy_stream_in *)calloc(1, sizeof(struct legacy_stream_in));
-
+    in = (struct wrapper_stream_in *)calloc(1, sizeof(struct wrapper_stream_in));
     if (!in)
         return -ENOMEM;
-	
-	int rc = 0;
 
-	in->legacy_in = android::AudioHardwareANM::openInputStream(gANM, devices, config, &rc);
-	
-	if (rc) {
-		ALOGE("%s: error rc = %d", __func__, rc);
-		goto err_open;
-	}
+    int (*open_input_stream)(struct audio_hw_device *dev,
+                             audio_io_handle_t handle,
+                             audio_devices_t devices,
+                             struct audio_config *config,
+                             struct audio_stream_in **stream_in,
+                             audio_input_flags_t flags,
+                             const char *address,
+                             audio_source_t source);
 
-	inANM = toInANM((struct audio_stream*)in);
-	ALOGE("%s: sampleRate = %d, format = %d, channel_mask=%p, conn id=%d, mAdmNumBufs=%d, mAdmBufSize=%d, mAdmBufSharedMem=%d", __func__, inANM->mSampleRate, inANM->mFormat, inANM->mChannels, inANM->mADMConnectionID, inANM->mAdmNumBufs, inANM->mAdmBufSize, inANM->mAdmBufSharedMem);
+
+    ret = WRAPPED_DEVICE(dev)->open_input_stream(WRAPPED_DEVICE(dev), handle, devices, config,
+                              &WRAPPED_STREAM_IN(in), flags, address, source);
     if(ret < 0)
         goto err_open;
 
@@ -571,13 +568,10 @@ err_open:
     return ret;
 }
 
+
 static void adev_close_input_stream(struct audio_hw_device *dev,
                                    struct audio_stream_in *in)
 {
-	struct AudioStreamInANM *inANM = toInANM((struct audio_stream*)in);
-	
-	ALOGE("%s: sampleRate = %d, format = %d, channel_mask=%p, conn id=%d, mAdmNumBufs=%d, mAdmBufSize=%d, mAdmBufSharedMem=%d", __func__, inANM->mSampleRate, inANM->mFormat, inANM->mChannels, inANM->mADMConnectionID, inANM->mAdmNumBufs, inANM->mAdmBufSize, inANM->mAdmBufSharedMem);
-	
     WRAPPED_DEVICE_CALL(dev, close_input_stream, WRAPPED_STREAM_IN(in));
     free(in);
 }
