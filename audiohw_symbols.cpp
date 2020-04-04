@@ -70,8 +70,19 @@ namespace android {
 			int setDevices(struct CommandThread *CT, unsigned int a1) {
 				   return shim_ZN7android17AudioStreamOutANM13CommandThread10setDevicesEj(CT, a1);
 			}
-			int setState(struct CommandThread *CT, int a1) {
-				   return shim_ZN7android17AudioStreamOutANM13CommandThread8setStateEi(CT, a1);
+			int setState(struct CommandThread *CT, int newState)
+			{
+			  struct Command *cmd; // r0@1 MAPDST
+
+			  cmd = (struct Command *) calloc(0x10, 1); //operator new(0x10u);
+			  cmd->unk3 = 0;
+			  cmd->unk4 = 0;
+			  cmd->mCmdType = 1;
+			  cmd->mState = newState;
+			  pthread_mutex_lock(&CT->mMutex);
+			  android::AudioStreamOutANM::CommandThread::insertCommand_l(CT, cmd);
+			  pthread_cond_signal(&CT->mPthreadCond);
+			  return pthread_mutex_unlock(&CT->mMutex);
 			}
 		}
 	}

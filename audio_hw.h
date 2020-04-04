@@ -189,10 +189,10 @@ struct __attribute__((aligned(4))) CommandThread
   int unk89;
   int unk90;
   int unk91;
-  int mMutex;
+  pthread_mutex_t mMutex;
   int unk94;
   int unk95;
-  pthread_cond_t *mPthreadCond;
+  pthread_cond_t mPthreadCond;
   int unk97;
   int unk98;
   int unk99;
@@ -201,6 +201,13 @@ struct __attribute__((aligned(4))) CommandThread
   int unk102;
   int unk103;
   int unk104;
+};
+
+struct Command {
+	int mCmdType;
+	int mState;
+	int unk3;
+	int unk4;
 };
 
 /* 154 */
@@ -300,7 +307,7 @@ struct __attribute__((aligned(4))) AudioStreamOutANM
   int unk89;
   int unk90;
   int unk91;
-  int mCTMutex;
+  pthread_mutex_t mCTMutex;
   int unk94;
   int unk95;
   pthread_cond_t *mPthreadCond;
