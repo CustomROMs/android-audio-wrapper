@@ -20,7 +20,61 @@
 #define DEFAULT_IN_SAMPLE_RATE (8000)
 #define DEFAULT_OUT_SAMPLING_RATE 44100
 
+//#include <utils/KeyedVector.h>
+
+//#if !defined(TEST)
 #include <hardware_legacy/AudioHardwareInterface.h>
+#include <hardware_legacy/AudioPolicyManagerBase.h>
+
+#include <utils/KeyedVector.h>
+
+using android::KeyedVector;
+
+
+using android_audio_legacy::AudioStreamOut;
+//#endif
+
+
+class AudioOutputDescriptor;
+class AudioInputDescriptor;
+
+/**
+ * TTY modes
+ */
+typedef enum {
+  STE_ADM_TTY_MODE_OFF = 0,
+  STE_ADM_TTY_MODE_FULL,
+  STE_ADM_TTY_MODE_HCO,
+  STE_ADM_TTY_MODE_VCO,
+} ste_adm_tty_mode_t;
+
+
+#define STE_ADM_TTY_MODE_INVALID ((ste_adm_tty_mode_t)-1)
+  
+extern "C" {
+	int ste_adm_client_set_cscall_tty_mode(ste_adm_tty_mode_t tty_mode);
+    int ste_adm_client_set_cscall_downstream_volume(int volume);
+    int ste_adm_client_get_cscall_upstream_volume(int* volume);
+    int ste_adm_client_connect(void);
+    int ste_adm_client_disconnect(int client_id);
+    int ste_adm_set_cscall_devices(int client_id, const char* indev, const char* outdev);
+    int ste_adm_client_set_cscall_upstream_volume(int volume);
+    int ste_adm_client_set_cscall_voip_mode(int enabled, int *mode);
+    int ste_adm_client_set_cscall_tty_mode(ste_adm_tty_mode_t tty_mode);
+    int ste_adm_client_drain(int client_id);
+    int ste_adm_dev2dev_connect(const char* src_dev, const char* dst_dev, int *flags);
+    int ste_adm_dev2dev_disconnect(int client_id);
+    int ste_adm_close_device(int client_id, const char* device_name);
+    int ste_adm_client_open_device(int client_id, const char* device_name,
+		int samplerate, int format, int* actual_samplerate, char** bufp, int bufsz, int num_bufs);
+    int ste_adm_client_send(int client_id, int buf_idx, int data_size, int *lpa_mode);
+    int ste_adm_client_set_app_volume(const char* dev_name, int volume);
+    int ste_adm_client_receive(int client_id, int* buf_idx);
+    int ste_adm_set_toplevel_map_live(const char *toplevel_device,  const char *new_actual_device,
+		const char *toplevel_device2, const char *new_actual_device2);
+    int ste_adm_client_set_toplevel_map(const char *toplevel_device, const char *actual_device);
+    int ste_adm_set_cscall_loopback_mode(int mode, int codec);
+}
 
 namespace android {
 	typedef int adm_api_type_t;
@@ -55,17 +109,24 @@ struct audio_hw_device_sec
   struct AudioHardwareANM *mANM;
 };
 
+struct __attribute__((aligned(4))) vector {
+	struct AudioOutputDescriptor *desc;
+	int size;
+};
+
 /* 25 */
 struct __attribute__((aligned(4))) AudioHardwareANM
 {
-  int unk0;
+  int mIsMicMuted;
   bool unk_xx1;
   bool index_start1;
   int unk_idx1;
   int unk_idx2;
   int unk_idx3;
-  int mInputs[5];
+  /* Lists if output and input descriptors */
   int mOutputs[5];
+  int mInputs[5];
+
   bool unk1;
   bool unk100;
   bool unk101;
@@ -86,7 +147,7 @@ struct __attribute__((aligned(4))) AudioHardwareANM
   bool mIsMono;
   bool unk14;
   bool unk15;
-  int mTtyMode;
+  ste_adm_tty_mode_t mTtyMode;
   char unk_xx[496];
   int unk17;
   bool unk18;
@@ -102,6 +163,57 @@ struct __attribute__((aligned(4))) AudioHardwareANM
   int mInputSource;
   int mFrameCount;
 };
+
+struct __attribute__((aligned(4))) AudioHardwareANM1
+{
+  int isMicMuted;
+  bool unk_xx1;
+  bool index_start1;
+  int unk_idx1;
+  int unk_idx2;
+  int unk_idx3;
+  /* Lists if output and input descriptors */
+  int mOutputs[5];
+  //Vector<int*> mOutputs;
+  struct vector mInputs;
+
+  bool unk1;
+  bool unk100;
+  bool unk101;
+  bool unk102;
+  int unk2;
+  int csCallState;
+  pthread_mutex_t mutex;
+  struct timeval *time;
+  int unk999;
+  int unk5;
+  char unk6[16];
+  char unk7[16];
+  bool mBtHeadsetEnabled;
+  bool unk9;
+  bool unk10;
+  bool mExtraVolumeEnabled;
+  bool unk12;
+  bool mIsMono;
+  bool unk14;
+  bool unk15;
+  ste_adm_tty_mode_t mTtyMode;
+  char unk_xx[496];
+  int unk17;
+  bool unk18;
+  bool unk20;
+  bool unk21;
+  bool unk22;
+  int unk23;
+  int devices1;
+  int devices2;
+  int mFormat;
+  int mChannelMask;
+  int mChannelMask2;
+  int mInputSource;
+  int mFrameCount;
+};
+
 
 /* 26 */
 struct __attribute__((aligned(4))) AudioStreamInANM

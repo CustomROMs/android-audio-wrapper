@@ -392,21 +392,26 @@ static void adev_close_output_stream(struct audio_hw_device *dev,
 
 static int adev_set_parameters(struct audio_hw_device *dev, const char *kvpairs)
 {
-    ALOGI("%s: kvpairs: %s", __FUNCTION__, kvpairs);
-    char *fixed_kvpairs = fixup_audio_parameters(kvpairs, JB_TO_ICS);
+	struct audio_hw_device_sec *adev = (struct audio_hw_device_sec *)dev;
+    //ALOGI("%s: kvpairs: %s", __FUNCTION__, kvpairs);
+    /*char *fixed_kvpairs = fixup_audio_parameters(kvpairs, JB_TO_ICS);
     int ret = WRAPPED_DEVICE_CALL(dev, set_parameters, fixed_kvpairs);
     free(fixed_kvpairs);
-    return ret;
+    return ret;*/
+	android::String8 s(kvpairs);
+	ALOGI("%s: kvpairs = %s", __FUNCTION__, kvpairs);
+	
+	return android::AudioHardwareANM::setParameters(adev->mANM, s);
 }
 
 static char * adev_get_parameters(const struct audio_hw_device *dev,
                                   const char *keys)
 {
-    ALOGI("%s: keys: %s", __FUNCTION__, keys);
     char *kvpairs = WRAPPED_DEVICE_CALL(dev, get_parameters, keys);
-    char *fixed_kvpairs = fixup_audio_parameters(kvpairs, ICS_TO_JB);
-    free(kvpairs);
-    return fixed_kvpairs;
+	ALOGI("%s: keys: %s, kvpairs = %s", __FUNCTION__, keys, kvpairs);
+    //char *fixed_kvpairs = fixup_audio_parameters(kvpairs, ICS_TO_JB);
+    //free(kvpairs);
+    return kvpairs; //fixed_kvpairs;
 }
 
 static uint32_t adev_get_supported_devices(const struct audio_hw_device *dev)
@@ -417,22 +422,41 @@ static uint32_t adev_get_supported_devices(const struct audio_hw_device *dev)
 
 static int adev_init_check(const struct audio_hw_device *dev)
 {
-    RETURN_WRAPPED_DEVICE_CALL(dev, init_check);
+   struct audio_hw_device_sec *adev = (struct audio_hw_device_sec *)dev;
+   return android::AudioHardwareANM::initCheck(adev->mANM);
 }
 
 static int adev_set_voice_volume(struct audio_hw_device *dev, float volume)
 {
-    RETURN_WRAPPED_DEVICE_CALL(dev, set_voice_volume, volume);
+	struct audio_hw_device_sec *adev = (struct audio_hw_device_sec *)dev;
+	ALOGE("%s: volume=%f", __func__, volume);
+    return android::AudioHardwareANM::setVoiceVolume(adev->mANM, volume);
+}
+
+static int adev_get_master_volume(struct audio_hw_device *dev, float *volume)
+{
+    return 0;
 }
 
 static int adev_set_master_volume(struct audio_hw_device *dev, float volume)
 {
-    RETURN_WRAPPED_DEVICE_CALL(dev, set_master_volume, volume);
+    return 0;
+}
+
+static int adev_get_master_mute(struct audio_hw_device *dev, bool *muted) {
+	return 0;
+}
+
+static int adev_set_master_mute(struct audio_hw_device *dev, bool muted) {
+	return 0;
 }
 
 static int adev_set_mode(struct audio_hw_device *dev, audio_mode_t mode)
 {
-    RETURN_WRAPPED_DEVICE_CALL(dev, set_mode, mode);
+	struct audio_hw_device_sec *adev = (struct audio_hw_device_sec *)dev;
+	ALOGE("%s: mode=%d", __func__, mode);
+	//RETURN_WRAPPED_DEVICE_CALL(dev, set_mode, mode);
+    return android::AudioHardwareANM::setMode(adev->mANM, mode);
 }
 
 static int adev_set_mic_mute(struct audio_hw_device *dev, bool state)
@@ -442,7 +466,9 @@ static int adev_set_mic_mute(struct audio_hw_device *dev, bool state)
 
 static int adev_get_mic_mute(const struct audio_hw_device *dev, bool *state)
 {
-    RETURN_WRAPPED_DEVICE_CALL(dev, get_mic_mute, state);
+	struct audio_hw_device_sec *adev = (struct audio_hw_device_sec *)dev;
+	*state = adev->mANM->mIsMicMuted;
+	return 0;
 }
 
 static size_t adev_get_input_buffer_size(const struct audio_hw_device *dev,
@@ -568,7 +594,7 @@ static int adev_open(const hw_module_t* module, const char* name,
     audio_hw_device_sec *legacy_device = (audio_hw_device_sec *)adev->wrapped_device;
     gANM = legacy_device->mANM;
 
-     android::AudioHardwareANM::muteAllSounds(gANM);
+     //android::AudioHardwareANM::muteAllSounds(gANM);
     //_ZN7android16AudioHardwareANM13muteAllSoundsEv(gANM);
     //android::AudioHardwareANM::muteAllSounds(gANM);
     ALOGE("%s: mIsMono: %d, mFormat: %d, mTtyMode: %d, mChannelMask: %d", __func__, gANM->mIsMono, gANM->mFormat, gANM->mTtyMode, gANM->mChannelMask);
@@ -603,9 +629,9 @@ static int adev_open(const hw_module_t* module, const char* name,
     adev->device.init_check = adev_init_check;
     adev->device.set_voice_volume = adev_set_voice_volume;
     adev->device.set_master_volume = adev_set_master_volume;
-    adev->device.get_master_volume = NULL; //adev_get_master_volume;
-    adev->device.set_master_mute = NULL; //adev_set_master_mute;
-    adev->device.get_master_mute = NULL; //adev_get_master_mute;
+    adev->device.get_master_volume = adev_get_master_volume;
+    adev->device.set_master_mute = adev_set_master_mute;
+    adev->device.get_master_mute = adev_get_master_mute;
     adev->device.set_mode = adev_set_mode;
     adev->device.set_mic_mute = adev_set_mic_mute;
     adev->device.get_mic_mute = adev_get_mic_mute;

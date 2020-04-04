@@ -42,7 +42,7 @@ LOCAL_SRC_FILES := \
 #    audio_hw_hal.cpp
 
 LOCAL_SHARED_LIBRARIES := \
-    libaudiohw libhardware liblog libutils libdl
+    libaudiohw libste_adm libhardware liblog libutils libdl
 
 LOCAL_LDLIBS := -laudiohw
 LOCAL_LDFLAGS := -Wl,--unresolved-symbols=ignore-in-object-files
@@ -65,10 +65,12 @@ LOCAL_SRC_FILES := \
 
 LOCAL_INCLUDES := hardware/libhardware_legacy/include
 LOCAL_INCLUDES += hardware/libhardware/include
-LOCAL_SHARED_LIBRARIES :=
 
-LOCA_CFLAGS := -DHOST
+LOCAL_INCLUDES += hardware/u8500/libutils_legacy
+#LOCAL_C_INCLUDES += hardware/u8500/libutils/include
+LOCAL_SHARED_LIBRARIES := libLog
+
 LOCAL_MODULE := audiohw_test
 LOCAL_MODULE_TAGS := optional
 
-include $(BUILD_HOST_EXECUTABLE)
+include $(BUILD_EXECUTABLE)
