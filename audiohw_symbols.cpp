@@ -43,10 +43,67 @@ namespace android {
 	}
 }
 
+extern "C" int getpriority(int, int);
+extern "C" void setpriority(int, int, int);
+
+namespace android {
+	namespace AudioStreamOutANM {
+		   namespace CommandThread {
+			int start(struct CommandThread *CT) {
+				   return shim_ZN7android17AudioStreamOutANM13CommandThread5startEv(CT);
+			}
+			int exit(struct CommandThread *CT) {
+				   return shim_ZN7android17AudioStreamOutANM13CommandThread4exitEv(CT);
+			}
+			int dump(struct CommandThread *CT, android::String8& a1) {
+				   return shim_ZN7android17AudioStreamOutANM13CommandThread4dumpERNS_7String8E(CT, a1);
+			}
+			int insertCommand_l(struct CommandThread *CT, struct Command* c) {
+				   return shim_ZN7android17AudioStreamOutANM13CommandThread15insertCommand_lEPNS1_7CommandE(CT, c);
+			}
+			int setForce(struct CommandThread *CT) {
+				   return shim_ZN7android17AudioStreamOutANM13CommandThread8setForceEv(CT);
+			}
+			int setStream(struct CommandThread *CT, audio_stream_type_t a1) {
+				   return shim_ZN7android17AudioStreamOutANM13CommandThread9setStreamE19audio_stream_type_t(CT, a1);
+			}
+			int setDevices(struct CommandThread *CT, unsigned int a1) {
+				   return shim_ZN7android17AudioStreamOutANM13CommandThread10setDevicesEj(CT, a1);
+			}
+			int setState(struct CommandThread *CT, int a1) {
+				   return shim_ZN7android17AudioStreamOutANM13CommandThread8setStateEi(CT, a1);
+			}
+		}
+	}
+}
+
 namespace android {
         namespace AudioStreamOutANM {
-                int updateState(struct AudioStreamOutANM *OutANM, int a1) {
-                        return shim_ZN7android17AudioStreamOutANM11updateStateEi(OutANM, a1);
+                int connectIfFmRadio(struct AudioStreamOutANM *OutANM) {
+                        return shim_ZN7android17AudioStreamOutANM16connectIfFmRadioEv(OutANM);
+                }
+                int disconnectIfFmRadio(struct AudioStreamOutANM *OutANM) {
+                        return shim_ZN7android17AudioStreamOutANM19disconnectIfFmRadioEv(OutANM);
+                }
+                int changeDevice(struct AudioStreamOutANM *OutANM, int a1, unsigned int a2, audio_stream_type_t a3, bool a4) {
+                        return shim_ZN7android17AudioStreamOutANM12changeDeviceEij19audio_stream_type_tb(OutANM, a1, a2, a3, a4);
+                }
+                int updateState(struct AudioStreamOutANM *outANM, int newState) {
+					int state; // r3@1
+					int oldPriority; // r6@3
+
+					ALOGE("%s: updateState(%d -> %d)", __func__, outANM->mState, newState);
+					state = outANM->mState;
+					if ( state & 8 && state != newState )
+					{
+						   oldPriority = getpriority(0, 0);
+						   setpriority(0, 0, -19);
+						   pthread_mutex_lock(&outANM->mMutex);
+						   android::AudioStreamOutANM::disconnectIfFmRadio(outANM);
+						   pthread_mutex_unlock(&outANM->mMutex);
+						   setpriority(0, 0, oldPriority);
+					}
+					return android::AudioStreamOutANM::CommandThread::setState(outANM->mCommandThread, newState);
                 }
                 int getCurrentState(struct AudioStreamOutANM *OutANM) {
                         return shim_ZN7android17AudioStreamOutANM15getCurrentStateEv(OutANM);
@@ -111,12 +168,7 @@ namespace android {
                 int preCloseDevice(struct AudioStreamOutANM *OutANM, struct DeviceList* a1) {
                         return shim_ZN7android17AudioStreamOutANM14preCloseDeviceEPNS_10DeviceListE(OutANM, a1);
                 }
-                int connectIfFmRadio(struct AudioStreamOutANM *OutANM) {
-                        return shim_ZN7android17AudioStreamOutANM16connectIfFmRadioEv(OutANM);
-                }
-                int disconnectIfFmRadio(struct AudioStreamOutANM *OutANM) {
-                        return shim_ZN7android17AudioStreamOutANM19disconnectIfFmRadioEv(OutANM);
-                }
+
                 int getSpecialRouting(struct AudioStreamOutANM *OutANM, struct DeviceList* a1, struct DeviceList* a2) {
                         return shim_ZN7android17AudioStreamOutANM17getSpecialRoutingEPNS_10DeviceListES2_(OutANM, a1, a2);
                 }
@@ -158,9 +210,6 @@ namespace android {
                 }
                 int doTransition(struct AudioStreamOutANM *OutANM, int a1, unsigned int a2, audio_stream_type_t a3, change_type_t a4) {
                         return shim_ZN7android17AudioStreamOutANM12doTransitionEij19audio_stream_type_tNS0_13change_type_tE(OutANM, a1, a2, a3, a4);
-                }
-                int changeDevice(struct AudioStreamOutANM *OutANM, int a1, unsigned int a2, audio_stream_type_t a3, bool a4) {
-                        return shim_ZN7android17AudioStreamOutANM12changeDeviceEij19audio_stream_type_tb(OutANM, a1, a2, a3, a4);
                 }
                 int openDevices(struct AudioStreamOutANM *OutANM) {
                         return shim_ZN7android17AudioStreamOutANM11openDevicesEv(OutANM);
@@ -353,39 +402,6 @@ namespace android {
                 }
         }
 }
-
-
-namespace android {
-	namespace AudioStreamOutANM {
-		   namespace CommandThread {
-			int start(struct CommandThread *CT) {
-				   return shim_ZN7android17AudioStreamOutANM13CommandThread5startEv(CT);
-			}
-			int exit(struct CommandThread *CT) {
-				   return shim_ZN7android17AudioStreamOutANM13CommandThread4exitEv(CT);
-			}
-			int dump(struct CommandThread *CT, android::String8& a1) {
-				   return shim_ZN7android17AudioStreamOutANM13CommandThread4dumpERNS_7String8E(CT, a1);
-			}
-			int insertCommand_l(struct CommandThread *CT, struct Command* c) {
-				   return shim_ZN7android17AudioStreamOutANM13CommandThread15insertCommand_lEPNS1_7CommandE(CT, c);
-			}
-			int setForce(struct CommandThread *CT) {
-				   return shim_ZN7android17AudioStreamOutANM13CommandThread8setForceEv(CT);
-			}
-			int setStream(struct CommandThread *CT, audio_stream_type_t a1) {
-				   return shim_ZN7android17AudioStreamOutANM13CommandThread9setStreamE19audio_stream_type_t(CT, a1);
-			}
-			int setDevices(struct CommandThread *CT, unsigned int a1) {
-				   return shim_ZN7android17AudioStreamOutANM13CommandThread10setDevicesEj(CT, a1);
-			}
-			int setState(struct CommandThread *CT, int a1) {
-				   return shim_ZN7android17AudioStreamOutANM13CommandThread8setStateEi(CT, a1);
-			}
-		}
-	}
-}
-
 
 
 namespace android {

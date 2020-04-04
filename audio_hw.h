@@ -261,7 +261,7 @@ struct __attribute__((aligned(4))) AudioStreamOutANM
   int unk62;
   int mLatency;
   int mState;
-  int mStreamType;
+  audio_stream_type_t mStreamType;
   bool mFmRadioConnectionID;
   bool unk662;
   bool unk663;
