@@ -448,9 +448,12 @@ static int adev_get_mic_mute(const struct audio_hw_device *dev, bool *state)
 static size_t adev_get_input_buffer_size(const struct audio_hw_device *dev,
                                     const struct audio_config *config)
 {
-    ALOGV("%s", __FUNCTION__);
+    //size_t res = WRAPPED_DEVICE(dev)->get_input_buffer_size(WRAPPED_DEVICE(dev), config);
+    int channels_count = popcount(config->channel_mask);
+    size_t buffer_size = (40 * channels_count * config->sample_rate) / 1000;
+    ALOGE("%s: channels count: %d, format: %d, sampleRate: %d, size=%d", __FUNCTION__, channels_count, config->format, config->sample_rate, buffer_size);
 
-    return WRAPPED_DEVICE(dev)->get_input_buffer_size(WRAPPED_DEVICE(dev), config);
+    return buffer_size;
 }
 
 static int adev_open_input_stream(struct audio_hw_device *dev,

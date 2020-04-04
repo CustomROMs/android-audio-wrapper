@@ -57,3 +57,18 @@ LOCAL_MODULE_TAGS := optional
 
 include $(BUILD_SHARED_LIBRARY)
 #include $(BUILD_HEAPTRACKED_SHARED_LIBRARY)
+
+include $(CLEAR_VARS)
+
+LOCAL_SRC_FILES := \
+       test.cpp
+
+LOCAL_INCLUDES := hardware/libhardware_legacy/include
+LOCAL_INCLUDES += hardware/libhardware/include
+LOCAL_SHARED_LIBRARIES :=
+
+LOCA_CFLAGS := -DHOST
+LOCAL_MODULE := audiohw_test
+LOCAL_MODULE_TAGS := optional
+
+include $(BUILD_HOST_EXECUTABLE)
