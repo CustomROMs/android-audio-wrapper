@@ -57,6 +57,28 @@ struct AudioHardwareANM *gANM;
 SortedVector<struct AudioStreamInANM*> *gInputs;
 SortedVector<struct AudioStreamOutANM*> *gOutputs;
 
+
+extern "C" {
+	int legacy_adev_open(const hw_module_t* module, const char* name,
+                            hw_device_t** device);
+							
+	int legacy_adev_close(hw_device_t* device);
+	size_t legacy_adev_get_input_buffer_size(const struct audio_hw_device *dev,
+                                         const struct audio_config *config);
+	int legacy_adev_open_input_stream(struct audio_hw_device *dev,
+                                  audio_io_handle_t handle,
+                                  audio_devices_t devices,
+                                  struct audio_config *config,
+                                  struct audio_stream_in **stream_in,
+                                  audio_input_flags_t flags __unused,
+                                  const char *address __unused,
+                                  audio_source_t source __unused);
+	void legacy_adev_close_input_stream(struct audio_hw_device *dev,
+                               struct audio_stream_in *stream);
+}
+
+struct audio_hw_device *gDevice;
+
 struct wrapper_audio_device {
     struct audio_hw_device device;
     struct wrapper::audio_hw_device *wrapped_device;
@@ -151,17 +173,18 @@ enum {
 
 static inline struct AudioStreamInANM* toInANM(struct audio_stream *in) {
 	struct legacy_stream_in *lin;
-	lin = (struct legacy_stream_in *)in;
-	struct AudioStreamInANM *inANM = lin->legacy_in;
+	lin = (struct legacy_stream_in *)WRAPPED_STREAM_IN(in);
+	struct AudioStreamInANM *inANM = (struct AudioStreamInANM*)lin->legacy_in;
 	return inANM;
 }
 
 static inline struct AudioStreamInANM* toInANMc(const struct audio_stream *in) {
 	struct legacy_stream_in *lin;
-	lin = (struct legacy_stream_in *)in;
-	struct AudioStreamInANM *inANM = lin->legacy_in;
+	lin = (struct legacy_stream_in *)WRAPPED_STREAM_IN(in);
+	struct AudioStreamInANM *inANM = (struct AudioStreamInANM*)lin->legacy_in;
 	return inANM;
 }
+
 
 static uint32_t out_get_sample_rate(const struct audio_stream *stream)
 {
@@ -506,9 +529,8 @@ static int adev_get_mic_mute(const struct audio_hw_device *dev, bool *state)
 static size_t adev_get_input_buffer_size(const struct audio_hw_device *dev,
                                     const struct audio_config *config)
 {
-	return android::AudioHardwareANM::getInputBufferSize(gANM, config->sample_rate, config->format, popcount(config->channel_mask));
+	return gDevice->get_input_buffer_size(gDevice, config);
 }
-
 
 static int adev_open_input_stream(struct audio_hw_device *dev,
                              audio_io_handle_t handle,
@@ -519,61 +541,14 @@ static int adev_open_input_stream(struct audio_hw_device *dev,
                                   const char *address __unused,
                                   audio_source_t source __unused)
 {
-    struct wrapper_stream_in *in;
-    int ret;
-
-    ALOGI("%s: devices 0x%x", __FUNCTION__, devices);
-
-    in = (struct wrapper_stream_in *)calloc(1, sizeof(struct wrapper_stream_in));
-    if (!in)
-        return -ENOMEM;
-
-    int (*open_input_stream)(struct audio_hw_device *dev,
-                             audio_io_handle_t handle,
-                             audio_devices_t devices,
-                             struct audio_config *config,
-                             struct audio_stream_in **stream_in,
-                             audio_input_flags_t flags,
-                             const char *address,
-                             audio_source_t source);
-
-
-    ret = WRAPPED_DEVICE(dev)->open_input_stream(WRAPPED_DEVICE(dev), handle, devices, config,
-                              &WRAPPED_STREAM_IN(in), flags, address, source);
-    if(ret < 0)
-        goto err_open;
-
-    in->stream.common.get_sample_rate = in_get_sample_rate;
-    in->stream.common.set_sample_rate = in_set_sample_rate;
-    in->stream.common.get_buffer_size = in_get_buffer_size;
-    in->stream.common.get_channels = in_get_channels;
-    in->stream.common.get_format = in_get_format;
-    in->stream.common.set_format = in_set_format;
-    in->stream.common.standby = in_standby;
-    in->stream.common.dump = in_dump;
-    in->stream.common.set_parameters = in_set_parameters;
-    in->stream.common.get_parameters = in_get_parameters;
-    in->stream.common.add_audio_effect = in_add_audio_effect;
-    in->stream.common.remove_audio_effect = in_remove_audio_effect;
-    in->stream.set_gain = in_set_gain;
-    in->stream.read = in_read;
-    in->stream.get_input_frames_lost = in_get_input_frames_lost;
-
-    *stream_in = &in->stream;
-    return 0;
-
-err_open:
-    free(in);
-    *stream_in = NULL;
-    return ret;
+    return gDevice->open_input_stream(gDevice, handle, devices, config, stream_in, flags, address, source);
 }
 
 
 static void adev_close_input_stream(struct audio_hw_device *dev,
                                    struct audio_stream_in *in)
 {
-    WRAPPED_DEVICE_CALL(dev, close_input_stream, WRAPPED_STREAM_IN(in));
-    free(in);
+	gDevice->close_input_stream(gDevice, in);
 }
 
 static int adev_dump(const audio_hw_device_t *dev, int fd)
@@ -586,6 +561,8 @@ static int adev_close(hw_device_t *dev)
     ALOGI("%s", __FUNCTION__);
     WRAPPED_DEVICE(dev)->common.close((hw_device_t*)&(WRAPPED_DEVICE(dev)));
     free(dev);
+	
+	gDevice->common.close((hw_device_t*)gDevice);
     return 0;
 }
 
@@ -606,6 +583,8 @@ static int adev_open(const hw_module_t* module, const char* name,
 
     ret = load_vendor_module(module, name, (hw_device_t**) &adev->wrapped_device,
                              AUDIO_HARDWARE_MODULE_ID_PRIMARY);
+							 
+	int rc1 = legacy_adev_open(module, AUDIO_HARDWARE_INTERFACE, (hw_device_t**)&gDevice);
 
     if (ret) {
         free(adev);
